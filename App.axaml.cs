@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
@@ -15,13 +14,15 @@ public partial class App : Application
     
     public override void OnFrameworkInitializationCompleted()
     {
+#pragma warning disable CS8604 // Possible null reference argument.
         var suspension = new AutoSuspendHelper(ApplicationLifetime);
+#pragma warning restore CS8604 // Possible null reference argument.
         RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
-        RxApp.SuspensionHost.SetupDefaultSuspendResume(new AkavacheSuspensionDriver<MainWindowViewModel>());
+        RxApp.SuspensionHost.SetupDefaultSuspendResume(new AkavacheSuspensionDriver());
         suspension.OnFrameworkInitializationCompleted();
 
         var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
-        new MainWindow { DataContext = state }.Show();
+        new MainWindow(state).Show();
 
         base.OnFrameworkInitializationCompleted();
     }

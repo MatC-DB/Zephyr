@@ -10,8 +10,12 @@
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
-        Title="Zephyr"
-        Icon="/icon.ico">
+        Title="Zephyr" Icon="/icon.ico"
+        Width="{Binding Width, Mode=TwoWay}"
+        Height="{Binding Height, Mode=TwoWay}"
+        WindowState="{Binding State, Mode=TwoWay}"
+        PositionChanged="OnPositionChanged"
+        >
   <Window.DataContext>
     <local:MainWindowViewModel />
   </Window.DataContext>
@@ -32,9 +36,9 @@
             <StackPanel Spacing="5" MaxWidth="300">
               <StackPanel Orientation="Horizontal">
                 <Image Source="/icon.ico" Width="32" />
-                <TextBlock Margin="5,0,0,0" Classes="h1">
+                <TextBlock Margin="5,0,0,0">
                   <TextBlock.Styles>
-                    <Style Selector="TextBlock.h1">
+                    <Style Selector="TextBlock">
                       <Setter Property="FontSize" Value="32"/>
                     </Style>
                   </TextBlock.Styles>
@@ -48,7 +52,6 @@
               <Button Margin="0,5,0,0" HorizontalAlignment="Right"
                       Command="{Binding OnLogin}">Login</Button>
             </StackPanel>
-
             <StackPanel VerticalAlignment="Bottom" Orientation="Horizontal">
               <TextBlock>v</TextBlock>
               <TextBlock Text="{Binding Version, FallbackValue=DEBUG}" />
