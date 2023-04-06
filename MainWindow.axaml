@@ -47,7 +47,7 @@
               <TextBox Text="{Binding Username}" />
               <TextBlock Margin="0,5,0,0">Password</TextBlock>
               <TextBox Text="{Binding Password}" PasswordChar="*" />
-              <Button IsEnabled="{Binding IsConnected}" Margin="0,5,0,0" HorizontalAlignment="Right"
+              <Button Margin="0,5,0,0" HorizontalAlignment="Right"
                       Command="{Binding OnLogin}">Login</Button>
               <TextBlock Foreground="Red" Text="{Binding ErrorMessage}" />
             </StackPanel>

@@ -4,21 +4,20 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using static System.Net.WebRequestMethods;
 
-namespace Zephyr
-{
-    internal class TimeView
-    {
+namespace Zephyr {
+    internal class TimeView {
         private const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
 
         private readonly MainWindowViewModel _viewModel;
 
         private int _processesRunning = 0;
 
-        private int ProcessesRunning
-        {
+        private bool _isConnecting = false;
+        private bool _isConnected = false;
+
+        private int ProcessesRunning {
             get { return _processesRunning; }
-            set
-            {
+            set {
                 _processesRunning = value;
                 _viewModel.IsLoading = _processesRunning > 0;
             }
@@ -28,30 +27,26 @@ namespace Zephyr
         private IBrowser? _browser;
         private IPage? _page;
 
-        public TimeView(MainWindowViewModel viewModel)
-        {
+        public TimeView(MainWindowViewModel viewModel) {
             _viewModel = viewModel;
         }
 
-        ~TimeView()
-        {
+        ~TimeView() {
             _browser?.CloseAsync();
             _playWright?.Dispose();
         }
 
-        public async Task Connect()
-        {
+        public async Task Connect() {
+            _isConnecting = true;
             _viewModel.ErrorMessage = string.Empty;
 
-            try
-            {
+            try {
                 ProcessesRunning++;
 
                 _playWright ??= await Playwright.CreateAsync();
 
 #if DEBUG
-                _browser ??= await _playWright.Chromium.LaunchAsync(new()
-                {
+                _browser ??= await _playWright.Chromium.LaunchAsync(new() {
                     Headless = false,
                     SlowMo = 50,
                 });
@@ -64,27 +59,39 @@ namespace Zephyr
                 await _page.GotoAsync(BASE_URL + "Login");
                 Debug.WriteLine("[Zephyr] Got page");
 
-                _viewModel.IsConnected = true;
+                _isConnected = true;
             }
-            catch
-            {
+            catch {
                 _viewModel.ErrorMessage = "Connection failed.";
-                _viewModel.IsConnected = false;
-            } finally
-            {
+            }
+            finally {
                 ProcessesRunning--;
+
+                _isConnecting = false;
             }
         }
 
-        public async Task<bool> TryLogin()
-        {
-            if (!_viewModel.IsConnected) return false;
-            if (_page == null) throw new InvalidOperationException();
+        public async Task WaitForConnection() {
+            if (_isConnected)
+                return;
+
+            if (_isConnecting) {
+                while (!_isConnected)
+                    await Task.Delay(25); // lol
+            }
+            else {
+                await Connect();
+            }
+        }
+
+        public async Task<bool> TryLogin() {
+            await WaitForConnection();
 
             _viewModel.ErrorMessage = string.Empty;
 
-            try
-            {
+            try {
+                ProcessesRunning++;
+
                 await _page.GotoAsync(BASE_URL + "Login");
 
                 await _page.GetByLabel("Email address or username").FillAsync(_viewModel.Username);
@@ -96,27 +103,27 @@ namespace Zephyr
 
                 var result = _page.Url == BASE_URL;
 
-                if (!result) _viewModel.ErrorMessage = "Incorrect login details.";
+                if (!result)
+                    _viewModel.ErrorMessage = "Incorrect login details.";
 
+                ProcessesRunning--;
                 return result;
             }
-            catch
-            {
+            catch {
                 _viewModel.ErrorMessage = "Login failed.";
-                Debug.WriteLine("[Zephyr] Login failed");
 
+                ProcessesRunning--;
                 return false;
             }
         }
 
-        public async Task Snapshot()
-        {
-            if (_page == null) return;
+        public async Task Snapshot() {
+            if (_page == null)
+                return;
 
             var dateTime = DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture).Replace("-", "").Replace(":", "");
 
-            await _page.ScreenshotAsync(new()
-            {
+            await _page.ScreenshotAsync(new() {
                 Path = "screenshot" + dateTime + ".png"
             });
 

@@ -3,10 +3,8 @@ using ReactiveUI;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-namespace Zephyr
-{
-    public partial class MainWindowViewModel : ReactiveObject, IScreen
-    {
+namespace Zephyr {
+    public partial class MainWindowViewModel : ReactiveObject, IScreen {
         public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "DEBUG";
 
         [DataMember]
@@ -18,12 +16,11 @@ namespace Zephyr
         public WindowState State { get; set; } = WindowState.Normal;
 
         [DataMember]
-        public bool IsFullScreen
-        {
+        public bool IsFullScreen {
             get => State == WindowState.Maximized;
-            set
-            {
-                if (value && State == WindowState.Normal) State = WindowState.Maximized;
+            set {
+                if (value && State == WindowState.Normal)
+                    State = WindowState.Maximized;
             }
         }
 
