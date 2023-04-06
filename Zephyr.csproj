@@ -33,4 +33,13 @@
   <ItemGroup>
     <Resource Include="icon.ico" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Login\Login.axaml.cs">
+      <DependentUpon>Login.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Main\Main.axaml.cs">
+      <DependentUpon>Main.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

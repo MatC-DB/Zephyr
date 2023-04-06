@@ -1,12 +1,9 @@
 ﻿using Avalonia.Controls;
 using ReactiveUI;
-using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace Zephyr {
     public partial class MainWindowViewModel : ReactiveObject, IScreen {
-        public string Version { get; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "DEBUG";
-
         [DataMember]
         public double Width { get; set; } = 800;
 

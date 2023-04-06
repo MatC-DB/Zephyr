@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.ReactiveUI;
-using System.Diagnostics;
 
 namespace Zephyr;
 

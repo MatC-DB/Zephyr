@@ -1,15 +1,24 @@
 ﻿using System.Runtime.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
+using Microsoft.Playwright;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace Zephyr {
     [DataContract]
     public partial class MainWindowViewModel : ReactiveObject, IScreen {
-        private readonly TimeView _timeView;
+        public const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
 
-        public RoutingState Router { get; } = new RoutingState();
+        private IPlaywright? _playWright;
+
+        private Mutex _runningProcessesMutex = new();
+        private int _processesRunning = 0;
+
+        public RoutingState Router { get; } = new();
+
+        [Reactive]
+        public bool IsLoading { get; private set; } = false;
 
         [Reactive, DataMember]
         public string Username { get; set; } = string.Empty;
@@ -17,43 +26,48 @@ namespace Zephyr {
         [Reactive, DataMember]
         public string Password { get; set; } = string.Empty;
 
-        public ICommand OnLogin { get; }
-
-        [Reactive]
-        public bool IsLoading { get; set; } = false;
-
-        [Reactive]
-        public string ErrorMessage { get; set; } = string.Empty;
-
-        public bool IsSignedIn { get; private set; } = false;
+        public IBrowser? Browser { get; private set; } = null;
 
         public MainWindowViewModel() {
-            OnLogin = ReactiveCommand.CreateFromTask(Login);
+            Router.Navigate.Execute(new LoginViewModel(this));
 
-            _timeView = new TimeView(this);
+            _ = GetBrowser();
         }
 
-        public async Task Connect() {
-            await _timeView.Connect();
+        ~MainWindowViewModel() {
+            _runningProcessesMutex.Dispose();
+            _playWright?.Dispose();
         }
 
-        private async Task Login() {
-            SetIsLoggedIn(await _timeView.TryLogin());
+        public void IncrementProcessesRunning() {
+            _runningProcessesMutex.WaitOne();
+            ++_processesRunning;
+            IsLoading = _processesRunning > 0;
+            _runningProcessesMutex.ReleaseMutex();
         }
 
-        private void SetIsLoggedIn(bool isLoggedIn) {
-            IsSignedIn = isLoggedIn;
+        public void DecrementProcessesRunning() {
+            _runningProcessesMutex.WaitOne();
+            --_processesRunning;
+            IsLoading = _processesRunning > 0;
+            _runningProcessesMutex.ReleaseMutex();
+        }
 
-            var isCurrentlyIn = Router.CurrentViewModel is ContentViewModel;
+        private async Task GetBrowser() {
+            IncrementProcessesRunning();
 
-            if (isLoggedIn) {
-                if (!isCurrentlyIn)
-                    Router.Navigate.Execute(new ContentViewModel(this));
-            }
-            else {
-                if (isCurrentlyIn)
-                    Router.NavigateBack.Execute();
-            }
+            _playWright ??= await Playwright.CreateAsync();
+
+#if DEBUG
+            Browser ??= await _playWright.Chromium.LaunchAsync(new() {
+                Headless = false,
+                SlowMo = 50,
+            });
+#else
+            Browser ??= await _playWright.Chromium.LaunchAsync();
+#endif
+
+            DecrementProcessesRunning();
         }
     }
 }
