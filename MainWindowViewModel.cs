@@ -1,47 +1,71 @@
 ﻿using System.Diagnostics;
+using System.Reactive;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Microsoft.Playwright;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Tmds.DBus;
 
 namespace Zephyr
 {
     [DataContract]
     public partial class MainWindowViewModel : ReactiveObject, IScreen
     {
+        private readonly TimeView _timeView;
+
         public RoutingState Router { get; } = new RoutingState();
 
         [Reactive, DataMember]
         public string Username { get; set; } = string.Empty;
 
-        [Reactive]
+        [Reactive, DataMember]
         public string Password { get; set; } = string.Empty;
 
         public ICommand OnLogin { get; }
 
+        [Reactive]
+        public bool IsLoading { get; set; } = false;
+
+        [Reactive]
+        public bool IsConnected { get; set; } = false;
+
+        [Reactive]
+        public string ErrorMessage { get; set; } = string.Empty;
+
+        public bool IsSignedIn { get; private set; } = false;
+
         public MainWindowViewModel()
         {
-            OnLogin = ReactiveCommand.Create(Login);
-        }
-        private void Login()
-        {
-            Debug.WriteLine(Username + "," + Password);
+            OnLogin = ReactiveCommand.CreateFromTask(Login);
 
-            Router.Navigate.Execute(new ContentViewModel(this));
+            _timeView = new TimeView(this);
         }
 
-        private async Task Test()
+        public async Task Connect()
         {
-            using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync();
-            var page = await browser.NewPageAsync();
-            await page.GotoAsync("https://playwright.dev/dotnet");
-            await page.ScreenshotAsync(new()
+            await _timeView.Connect();
+        }
+
+        private async Task Login()
+        {
+            SetIsLoggedIn(await _timeView.TryLogin());
+        }
+
+        private void SetIsLoggedIn(bool isLoggedIn)
+        {
+            IsSignedIn = isLoggedIn;
+
+            var isCurrentlyIn = Router.CurrentViewModel is ContentViewModel;
+
+            if (isLoggedIn)
             {
-                Path = "screenshot.png"
-            });
+                if(!isCurrentlyIn) Router.Navigate.Execute(new ContentViewModel(this));
+            }
+            else
+            {
+                if(isCurrentlyIn) Router.NavigateBack.Execute();
+            }
         }
     }
 }
