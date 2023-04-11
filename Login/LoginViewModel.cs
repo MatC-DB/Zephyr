@@ -33,18 +33,17 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
     }
 
     private async Task Login() {
-        while (_mainWindowViewModel.Browser is null)
-            await Task.Delay(25);
+        try {
+            var page = await _mainWindowViewModel.GetLockedPage();
 
-        IPage? page = null;
+            await LoginModel.Login(page, _mainWindowViewModel.Username, _mainWindowViewModel.Password);
 
-        (await LoginModel.Login(_mainWindowViewModel)).Match(
-            p => page = p,
-            s => ErrorMessage = s
-        );
-
-        if (page is not null)
-            await page.CloseAsync();
+            _mainWindowViewModel.Router.Navigate.Execute(new MainViewModel(_mainWindowViewModel));
+        } catch (LoginModel.LoginException e) {
+            ErrorMessage = e.Message;
+        } finally {
+            _mainWindowViewModel.ReleasePage();
+        }
     }
 }
 

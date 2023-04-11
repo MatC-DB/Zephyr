@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 namespace Zephyr {
     public partial class MainWindowViewModel : ReactiveObject, IScreen {
         [DataMember]
-        public double Width { get; set; } = 800;
+        public double Width { get; set; } = 350;
 
         [DataMember]
         public double Height { get; set; } = 450;

@@ -11,8 +11,12 @@ namespace Zephyr {
         public const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
 
         private IPlaywright? _playWright;
+        private IBrowser? _browser;
+        private IPage? _page;
 
-        private Mutex _runningProcessesMutex = new();
+        private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+
+        private readonly object _processesRunningLock = new();
         private int _processesRunning = 0;
 
         public RoutingState Router { get; } = new();
@@ -26,7 +30,6 @@ namespace Zephyr {
         [Reactive, DataMember]
         public string Password { get; set; } = string.Empty;
 
-        public IBrowser? Browser { get; private set; } = null;
 
         public MainWindowViewModel() {
             Router.Navigate.Execute(new LoginViewModel(this));
@@ -35,22 +38,39 @@ namespace Zephyr {
         }
 
         ~MainWindowViewModel() {
-            _runningProcessesMutex.Dispose();
             _playWright?.Dispose();
+            _semaphoreSlim.Dispose();
         }
 
-        public void IncrementProcessesRunning() {
-            _runningProcessesMutex.WaitOne();
-            ++_processesRunning;
-            IsLoading = _processesRunning > 0;
-            _runningProcessesMutex.ReleaseMutex();
+        private void IncrementProcessesRunning() {
+            lock (_processesRunningLock) {
+                ++_processesRunning;
+                IsLoading = _processesRunning > 0;
+            }
         }
 
-        public void DecrementProcessesRunning() {
-            _runningProcessesMutex.WaitOne();
-            --_processesRunning;
-            IsLoading = _processesRunning > 0;
-            _runningProcessesMutex.ReleaseMutex();
+        private void DecrementProcessesRunning() {
+            lock (_processesRunningLock) {
+                --_processesRunning;
+                IsLoading = _processesRunning > 0;
+            }
+        }
+
+        public async Task<IPage> GetLockedPage() {
+            IncrementProcessesRunning();
+
+            while (_page is null)
+                await Task.Delay(25);
+
+            await _semaphoreSlim.WaitAsync();
+
+            return _page;
+        }
+
+        public void ReleasePage() {
+            _semaphoreSlim.Release();
+
+            DecrementProcessesRunning();
         }
 
         private async Task GetBrowser() {
@@ -58,14 +78,16 @@ namespace Zephyr {
 
             _playWright ??= await Playwright.CreateAsync();
 
-#if DEBUG
-            Browser ??= await _playWright.Chromium.LaunchAsync(new() {
+#if DEBUG && false
+            _browser ??= await _playWright.Chromium.LaunchAsync(new() {
                 Headless = false,
                 SlowMo = 50,
             });
 #else
-            Browser ??= await _playWright.Chromium.LaunchAsync();
+            _browser ??= await _playWright.Chromium.LaunchAsync();
 #endif
+
+            _page ??= await _browser.NewPageAsync();
 
             DecrementProcessesRunning();
         }
