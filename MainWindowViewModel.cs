@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -12,7 +14,8 @@ namespace Zephyr {
 
         private IPlaywright? _playWright;
         private IBrowser? _browser;
-        private IPage? _page;
+
+        private readonly Task<IPage> _getPage;
 
         private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
@@ -34,7 +37,9 @@ namespace Zephyr {
         public MainWindowViewModel() {
             Router.Navigate.Execute(new LoginViewModel(this));
 
-            _ = GetBrowser();
+            _getPage = GetPage();
+
+            Task.Run(async () => await _getPage);
         }
 
         ~MainWindowViewModel() {
@@ -59,12 +64,11 @@ namespace Zephyr {
         public async Task<IPage> GetLockedPage() {
             IncrementProcessesRunning();
 
-            while (_page is null)
-                await Task.Delay(25);
+            var page = await _getPage;
 
             await _semaphoreSlim.WaitAsync();
 
-            return _page;
+            return page;
         }
 
         public void ReleasePage() {
@@ -73,7 +77,7 @@ namespace Zephyr {
             DecrementProcessesRunning();
         }
 
-        private async Task GetBrowser() {
+        private async Task<IPage> GetPage() {
             IncrementProcessesRunning();
 
             _playWright ??= await Playwright.CreateAsync();
@@ -87,9 +91,13 @@ namespace Zephyr {
             _browser ??= await _playWright.Chromium.LaunchAsync();
 #endif
 
-            _page ??= await _browser.NewPageAsync();
+            var page = await _browser.NewPageAsync();
+
+            Debug.WriteLine("[ZEPHYR]: Got page");
 
             DecrementProcessesRunning();
+
+            return page;
         }
     }
 }
