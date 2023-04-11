@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Zephyr; 
+namespace Zephyr;
 
 internal class LoginModel {
     public static async Task Login(IPage page, string username, string password) {

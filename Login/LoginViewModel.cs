@@ -1,7 +1,5 @@
-﻿using Microsoft.Playwright;
-using ReactiveUI;
+﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -39,9 +37,11 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
             await LoginModel.Login(page, _mainWindowViewModel.Username, _mainWindowViewModel.Password);
 
             _mainWindowViewModel.Router.Navigate.Execute(new MainViewModel(_mainWindowViewModel));
-        } catch (LoginModel.LoginException e) {
+        }
+        catch (LoginModel.LoginException e) {
             ErrorMessage = e.Message;
-        } finally {
+        }
+        finally {
             _mainWindowViewModel.ReleasePage();
         }
     }
