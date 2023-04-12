@@ -13,6 +13,7 @@
         Width="{Binding Width, Mode=TwoWay}"
         Height="{Binding Height, Mode=TwoWay}"
         WindowState="{Binding State, Mode=TwoWay}"
+        WindowStartupLocation="CenterScreen"
         PositionChanged="OnPositionChanged"
         >
   <Panel>
@@ -29,7 +30,7 @@
       <rxui:RoutedViewHost Router="{Binding Router}"
                            PageTransition="{x:Null}">
         <rxui:RoutedViewHost.DefaultContent>
-            <TextBlock Foreground="Red" Text="Error, bad route encountered." />
+          <TextBlock Foreground="Red" Text="Error, bad route encountered." />
         </rxui:RoutedViewHost.DefaultContent>
         <rxui:RoutedViewHost.ViewLocator>
           <local:AppViewLocator />

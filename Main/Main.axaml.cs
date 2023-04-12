@@ -1,6 +1,6 @@
 using Avalonia.ReactiveUI;
 
-namespace Zephyr;
+namespace Zephyr.Main;
 
 public partial class Main : ReactiveUserControl<MainViewModel> {
     public Main() {

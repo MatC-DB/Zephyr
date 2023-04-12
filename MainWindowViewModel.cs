@@ -6,81 +6,87 @@ using System.Threading.Tasks;
 using Microsoft.Playwright;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Zephyr.Main.AddJob;
+using Zephyr.Main.Job;
 
-namespace Zephyr {
-    [DataContract]
-    public partial class MainWindowViewModel : ReactiveObject, IScreen {
-        public const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
+namespace Zephyr;
 
-        private IPlaywright? _playWright;
-        private IBrowser? _browser;
+[DataContract]
+public partial class MainWindowViewModel : ReactiveObject, IScreen {
+    public const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
 
-        private readonly Task<IPage> _getPage;
+    private IPlaywright? _playWright;
+    private IBrowser? _browser;
 
-        private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+    private readonly Task<IPage> _getPage;
 
-        private readonly object _processesRunningLock = new();
-        private int _processesRunning = 0;
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
 
-        public RoutingState Router { get; } = new();
+    private readonly object _processesRunningLock = new();
+    private int _processesRunning = 0;
 
-        [Reactive]
-        public bool IsLoading { get; private set; } = false;
+    public RoutingState Router { get; } = new();
 
-        [Reactive, DataMember]
-        public string Username { get; set; } = string.Empty;
+    [Reactive]
+    public bool IsLoading { get; private set; } = false;
 
-        [Reactive, DataMember]
-        public string Password { get; set; } = string.Empty;
+    [Reactive, DataMember]
+    public string Username { get; set; } = string.Empty;
 
+    [Reactive, DataMember]
+    public string Password { get; set; } = string.Empty;
 
-        public MainWindowViewModel() {
-            Router.Navigate.Execute(new LoginViewModel(this));
+    public Interaction<AddJobDialogViewModel, JobControlViewModel?> ShowAddJobDialog { get; }
 
-            _getPage = GetPage();
+    public MainWindowViewModel() {
+        ShowAddJobDialog = new Interaction<AddJobDialogViewModel, JobControlViewModel?>();
 
-            Task.Run(async () => await _getPage);
+        Router.Navigate.Execute(new Login.LoginViewModel(this));
+
+        _getPage = GetPage();
+
+        Task.Run(async () => await _getPage);
+    }
+
+    ~MainWindowViewModel() {
+        _playWright?.Dispose();
+        _semaphoreSlim.Dispose();
+    }
+
+    private void IncrementProcessesRunning() {
+        lock (_processesRunningLock) {
+            ++_processesRunning;
+            IsLoading = _processesRunning > 0;
         }
+    }
 
-        ~MainWindowViewModel() {
-            _playWright?.Dispose();
-            _semaphoreSlim.Dispose();
+    private void DecrementProcessesRunning() {
+        lock (_processesRunningLock) {
+            --_processesRunning;
+            IsLoading = _processesRunning > 0;
         }
+    }
 
-        private void IncrementProcessesRunning() {
-            lock (_processesRunningLock) {
-                ++_processesRunning;
-                IsLoading = _processesRunning > 0;
-            }
-        }
+    public async Task<IPage> GetLockedPage() {
+        IncrementProcessesRunning();
 
-        private void DecrementProcessesRunning() {
-            lock (_processesRunningLock) {
-                --_processesRunning;
-                IsLoading = _processesRunning > 0;
-            }
-        }
+        var page = await _getPage;
 
-        public async Task<IPage> GetLockedPage() {
-            IncrementProcessesRunning();
+        await _semaphoreSlim.WaitAsync();
 
-            var page = await _getPage;
+        return page;
+    }
 
-            await _semaphoreSlim.WaitAsync();
+    public void ReleasePage() {
+        _semaphoreSlim.Release();
 
-            return page;
-        }
+        DecrementProcessesRunning();
+    }
 
-        public void ReleasePage() {
-            _semaphoreSlim.Release();
+    private async Task<IPage> GetPage() {
+        IncrementProcessesRunning();
 
-            DecrementProcessesRunning();
-        }
-
-        private async Task<IPage> GetPage() {
-            IncrementProcessesRunning();
-
-            _playWright ??= await Playwright.CreateAsync();
+        _playWright ??= await Playwright.CreateAsync();
 
 #if DEBUG && false
             _browser ??= await _playWright.Chromium.LaunchAsync(new() {
@@ -88,16 +94,35 @@ namespace Zephyr {
                 SlowMo = 50,
             });
 #else
-            _browser ??= await _playWright.Chromium.LaunchAsync();
+        _browser ??= await _playWright.Chromium.LaunchAsync();
 #endif
 
-            var page = await _browser.NewPageAsync();
+        var page = await _browser.NewPageAsync();
 
-            Debug.WriteLine("[ZEPHYR]: Got page");
+        Debug.WriteLine("[ZEPHYR]: Got page");
 
-            DecrementProcessesRunning();
+        DecrementProcessesRunning();
 
-            return page;
+        return page;
+    }
+
+    private async Task Login(IPage page) {
+        await Zephyr.Login.LoginModel.Login(page, Username, Password);
+    }
+
+    public async Task RunTask(Func<IPage, Task> task, Func<Exception, bool>? tryHandleError = null) {
+        try {
+            var page = await GetLockedPage();
+
+            await Login(page);
+
+            await task(page);
+        }
+        catch (Exception e) {
+            tryHandleError?.Invoke(e);
+        }
+        finally {
+            ReleasePage();
         }
     }
 }

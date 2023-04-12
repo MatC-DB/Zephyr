@@ -2,43 +2,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:z="clr-namespace:Zephyr"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
-             x:Class="Zephyr.Main">
+             x:Class="Zephyr.Main.Main">
+  <UserControl.Resources>
+    <z:NegationConverter x:Key="negationConverter"/>
+  </UserControl.Resources>
   <DockPanel>
     <StackPanel DockPanel.Dock="Top">
       <Panel Margin="0,0,0,2">
-        <TextBlock FontSize="16">Status</TextBlock>
-      </Panel>
-      <TextBlock Text="{Binding Status, FallbackValue=???}" />
-      <Panel Margin="0,5,0,2">
         <TextBlock FontSize="16">Clocking</TextBlock>
       </Panel>
       <StackPanel Orientation="Horizontal" Spacing="5">
-        <Button Command="{Binding OnClockIn}">In</Button>
-        <Button Command="{Binding OnClockOut}">Out</Button>
+        <StackPanel.Styles>
+          <Style Selector="Button.on">
+            <Setter Property="BorderBrush" Value="#1693a5" />
+            <Setter Property="BorderThickness" Value="1" />
+          </Style>
+        </StackPanel.Styles>
+        <Button Classes.on="{Binding IsClockedIn}"
+                Command="{Binding OnClockIn}">In</Button>
+        <Button Classes.on="{Binding IsClockedOut}"
+                Command="{Binding OnClockOut}">Out</Button>
       </StackPanel>
       <StackPanel Orientation="Horizontal" Spacing="5"  Margin="0,5,0,2">
         <TextBlock FontSize="16" VerticalAlignment="Bottom">Jobs</TextBlock>
-        <Button Padding="4,0">+</Button>
+        <Button Padding="4,0" Command="{Binding OnAddJob}">+</Button>
       </StackPanel>
     </StackPanel>
     <ScrollViewer>
       <WrapPanel>
-        <Panel Width="50" Height="50" Background="Red" />
-        <Panel Width="50" Height="50" Background="Blue" />
-        <Panel Width="50" Height="50" Background="Green" />
-        <Panel Width="50" Height="50" Background="Red" />
-        <Panel Width="50" Height="50" Background="Blue" />
-        <Panel Width="50" Height="50" Background="Green" />
-        <Panel Width="50" Height="50" Background="Red" />
-        <Panel Width="50" Height="50" Background="Blue" />
-        <Panel Width="50" Height="50" Background="Green" />
-        <Panel Width="50" Height="50" Background="Red" />
-        <Panel Width="50" Height="50" Background="Blue" />
-        <Panel Width="50" Height="50" Background="Green" />
-        <Panel Width="50" Height="50" Background="Red" />
-        <Panel Width="50" Height="50" Background="Blue" />
-        <Panel Width="50" Height="50" Background="Green" />
       </WrapPanel>
     </ScrollViewer>
   </DockPanel>

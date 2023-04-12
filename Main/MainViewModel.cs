@@ -1,13 +1,13 @@
-﻿using Microsoft.Playwright;
-using ReactiveUI;
+﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Zephyr.Main.AddJob;
 
-namespace Zephyr;
+namespace Zephyr.Main;
+
 public class MainViewModel : ReactiveObject, IRoutableViewModel {
-    private const string STATUS_LOADING = "Loading...";
     private readonly MainWindowViewModel _mainWindowViewModel;
 
     public IScreen HostScreen { get { return _mainWindowViewModel; } }
@@ -15,11 +15,16 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
     public string UrlPathSegment { get; } = "CONTENT";
 
     [Reactive]
-    public string Status { get; set; } = STATUS_LOADING;
+    public bool IsClockedIn { get; private set; } = false;
+
+    [Reactive]
+    public bool IsClockedOut { get; private set; } = false;
 
     public ICommand OnClockIn { get; }
 
     public ICommand OnClockOut { get; }
+
+    public ICommand OnAddJob { get; }
 
     public MainViewModel(MainWindowViewModel screen) {
         _mainWindowViewModel = screen;
@@ -27,35 +32,26 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
         OnClockIn = ReactiveCommand.CreateFromTask(ClockIn);
         OnClockOut = ReactiveCommand.CreateFromTask(ClockOut);
 
+        OnAddJob = ReactiveCommand.CreateFromTask(async () => {
+            await _mainWindowViewModel.RunTask(async (page) => {
+                var addJobDialog = new AddJobDialogViewModel(page);
+
+                var result = await _mainWindowViewModel.ShowAddJobDialog.Handle(addJobDialog);
+            });
+        });
+
         Task.Run(GetStatus);
     }
 
-    private async Task Login(IPage page) {
-        await LoginModel.Login(page, _mainWindowViewModel.Username, _mainWindowViewModel.Password);
-    }
-
-    private void SetStatus(string message) {
-        Status = message;
-    }
-
-    private async Task RunTask(Func<IPage, Task> task) {
-        try {
-            var page = await _mainWindowViewModel.GetLockedPage();
-
-            await Login(page);
-
-            await task(page);
-        }
-        catch {
-            // TODO: do something better here
-        }
-        finally {
-            _mainWindowViewModel.ReleasePage();
-        }
+    private void SetStatus(bool status) {
+        IsClockedIn = status;
+        IsClockedOut = !status;
     }
 
     private async Task GetStatus() {
-        await RunTask(async (page) => await MainModel.GetStatus(page, SetStatus));
+        await _mainWindowViewModel.RunTask(async (page) => {
+            SetStatus(await MainModel.GetStatus(page));
+        });
     }
 
     private async Task ClockIn() {
@@ -67,7 +63,12 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
     }
 
     private async Task Clock(MainModel.Clocking type) {
-        await RunTask(async (page) => await MainModel.Clock(page, SetStatus, type));
+        await _mainWindowViewModel.RunTask(async (page) => {
+            await MainModel.Clock(page, type);
+            SetStatus(type == MainModel.Clocking.In);
+
+            // could get status here but would require some sort of check to see if the iTime backend has updated
+        });
     }
 }
 

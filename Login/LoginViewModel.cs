@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace Zephyr;
+namespace Zephyr.Login;
 
 public class LoginViewModel : ReactiveObject, IRoutableViewModel {
     private readonly MainWindowViewModel _mainWindowViewModel;
@@ -31,19 +31,21 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
     }
 
     private async Task Login() {
-        try {
-            var page = await _mainWindowViewModel.GetLockedPage();
+        await _mainWindowViewModel.RunTask(
+            async (page) => {
+                _mainWindowViewModel.Router.Navigate.Execute(new Main.MainViewModel(_mainWindowViewModel));
 
-            await LoginModel.Login(page, _mainWindowViewModel.Username, _mainWindowViewModel.Password);
+                await Task.CompletedTask;
+            },
+            (error) => {
+                if (error is not LoginModel.LoginException)
+                    return false;
 
-            _mainWindowViewModel.Router.Navigate.Execute(new MainViewModel(_mainWindowViewModel));
-        }
-        catch (LoginModel.LoginException e) {
-            ErrorMessage = e.Message;
-        }
-        finally {
-            _mainWindowViewModel.ReleasePage();
-        }
+                ErrorMessage = error.Message;
+
+                return true;
+            }
+        );
     }
 }
 

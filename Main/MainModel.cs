@@ -1,50 +1,38 @@
 ﻿using Microsoft.Playwright;
-using System;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Main;
 internal class MainModel {
 
-    internal static async Task GetStatus(IPage page, Action<string> statusSetter) {
+    internal static async Task<bool> GetStatus(IPage page) {
         await page.GotoAsync(MainWindowViewModel.BASE_URL + "Information");
 
-        var evaluateResult = await page.EvaluateAsync(@"() => {
+        return await page.EvaluateAsync<bool>(@"() => {
             const resultsChildren = document.getElementById(""Result"").children;
             const clockingRecords = resultsChildren[resultsChildren.length - 1];
 
-            if(clockingRecords.tagName !== ""DIV"") return {Job: ""???"", IsIn: false};
-
-            const tableRows = [...clockingRecords.getElementsByTagName(""tr"")].slice(1);
-            const tableData = tableRows.map((row) => [...row.getElementsByTagName(""td"")].map((col) => col.innerText))
-            const transform = tableData.map(([clock, action, job]) => ({clock, action, job}));
+            if(clockingRecords.tagName !== ""DIV"") return false;
 
             const date = (""0"" + (new Date()).getDate()).slice(-2);
-            const transformFiltered = transform.filter(({clock}) => clock.startsWith(date));
 
-            const lastJobIndex = transformFiltered.findLastIndex(row => !!row.job);
+            const actionsForToday = 
+                [...clockingRecords.getElementsByTagName(""tr"")].slice(1)
+                .map((row) => [...row.getElementsByTagName(""td"")])
+                .filter(([clock]) => clock.innerText.startsWith(date))
+                .map(([, action]) => action.innerText);
 
-            const details = {Job: transformFiltered[lastJobIndex].job, IsIn: false};
+            if(!actionsForToday.length) return false;
 
-            const lastIn = transformFiltered.findLastIndex(row => row.action === ""IN"");
+            const lastIn = actionsForToday.findLastIndex(action => action === ""IN"");
 
-            if(lastIn < 0) return details;
+            if(lastIn < 0) return false;
 
-            const lastOut = transformFiltered.findLastIndex(row => row.action === ""OUT"");
+            const lastOut = actionsForToday.findLastIndex(action => action === ""OUT"");
 
-            details.IsIn = lastOut < 0 ? true : (lastIn > lastOut);
-            return details;
+            if(lastOut < 0) return true;
+
+            return lastIn > lastOut;
         }");
-
-        bool isIn = evaluateResult.Value.GetProperty("IsIn").GetBoolean();
-
-        if (!isIn) {
-            statusSetter("Clocked out");
-            return;
-        }
-
-        string job = evaluateResult.Value.GetProperty("Job").GetRawText();
-
-        statusSetter($"Clocked in to job: {job}");
     }
 
     internal enum Clocking {
@@ -52,7 +40,7 @@ internal class MainModel {
         Out
     }
 
-    internal static async Task Clock(IPage page, Action<string> statusSetter, Clocking type) {
+    internal static async Task Clock(IPage page, Clocking type) {
         var isClockingIn = type == Clocking.In;
 
         await page.GotoAsync(MainWindowViewModel.BASE_URL);
@@ -61,9 +49,7 @@ internal class MainModel {
 
         await page.GetByText(isClockingIn ? "Clock In" : "Clock Out").ClickAsync();
 
-        statusSetter(isClockingIn ? "Clocked in" : "Clocked out");
-
-        // could get status here but would require some sort of check to see if the iTime backend has updated
+        // TODO: Could check for if its successful using on page text
     }
 }
 

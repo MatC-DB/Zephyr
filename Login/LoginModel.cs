@@ -2,13 +2,12 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Login;
 
 internal class LoginModel {
     public static async Task Login(IPage page, string username, string password) {
         try {
             await page.GotoAsync(MainWindowViewModel.BASE_URL + "Login");
-
 
             await page.GetByLabel("Email address or username").FillAsync(username);
             await page.GetByLabel("Password").FillAsync(password);

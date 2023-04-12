@@ -1,6 +1,6 @@
 using Avalonia.ReactiveUI;
 
-namespace Zephyr;
+namespace Zephyr.Login;
 
 public partial class Login : ReactiveUserControl<LoginViewModel> {
     public Login() {
