@@ -10,9 +10,9 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Zephyr.Main.Job;
+using Zephyr.Job;
 
-namespace Zephyr.Main.AddJob;
+namespace Zephyr.AddJob;
 
 public class AddJobDialogViewModel : ReactiveObject {
     private readonly IPage _page;
@@ -59,6 +59,10 @@ public class AddJobDialogViewModel : ReactiveObject {
     public AddJobDialogViewModel(IPage page) {
         _page = page;
 
+        CancelAddJob = ReactiveCommand.Create<JobControlViewModel?>(() => {
+            return null;
+        });
+
         BuildFilteredData(ref _jobSearchSourceCache, vm => vm.JobSearchText, out _jobSearchResults);
 
         this.WhenValueChanged(vm => vm.SelectedJob)
@@ -75,21 +79,16 @@ public class AddJobDialogViewModel : ReactiveObject {
             .Select(sequence => sequence != null)
             .ToProperty(this, vm => vm.IsOkEnabled, out _isOkEnabled);
 
-        AddJob = ReactiveCommand.Create(() => {
+        AddJob = ReactiveCommand.CreateFromTask<JobControlViewModel?>(async() => {
             if (SelectedJob == null || SelectedSequence == null)
-                return null;
+                throw new InvalidOperationException("Can't add job without having selected job and sequence");
 
-            return new JobControlViewModel() {
-                Job = SelectedJob,
-                Sequence = SelectedSequence
-            };
+            var value = await _page.EvaluateAsync<string>(
+                "(sequence) => ([...document.getElementById(\"SequenceChange\").getElementsByTagName(\"option\")]" +
+                ".slice(1).find(o => o.innerText === sequence)).value;", SelectedSequence);
+
+            return new JobControlViewModel(SelectedJob, SelectedSequence, value);
         });
-
-        CancelAddJob = ReactiveCommand.Create<JobControlViewModel?>(() => { 
-            return null; 
-        });
-
-        Task.Run(GetJobOptions);
     }
 
     private void BuildFilteredData(
@@ -101,7 +100,9 @@ public class AddJobDialogViewModel : ReactiveObject {
             this.WhenValueChanged(filterPropertyAccessor)
                 .Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
                 .Select<string?, Func<string, bool>>(filter =>
-                    (string item) => string.IsNullOrEmpty(filter) || item.Contains(filter, StringComparison.InvariantCultureIgnoreCase)
+                    (string item) => 
+                        string.IsNullOrEmpty(filter) 
+                        || item.Contains(filter, StringComparison.InvariantCultureIgnoreCase)
                 );
 
         sourceList.Connect()
@@ -111,13 +112,11 @@ public class AddJobDialogViewModel : ReactiveObject {
             .Subscribe();
     }
 
-    private async Task GetJobOptions() {
-        await _page.GotoAsync(MainWindowViewModel.BASE_URL);
-
-        await _page.EvaluateAsync(@"() => document.getElementsByName(""JobCostingModuleDisplay"")[0].click();");
+    public async Task GetJobOptions() {
+        await Model.OpenJobsPanel(_page);
 
         var options = await _page.EvaluateAsync<string[]>(
-            @"() => [...document.getElementById(""JobChange"").getElementsByTagName(""option"")].slice(1).map(o => o.innerText);"
+            "() => [...document.getElementById(\"JobChange\").getElementsByTagName(\"option\")].slice(1).map(o => o.innerText);"
         );
 
         _jobSearchSourceCache.Clear();
@@ -126,37 +125,33 @@ public class AddJobDialogViewModel : ReactiveObject {
 
     private async Task Next() {
         if (SelectedJob is null)
-            throw new InvalidOperationException("Selected job must not be null");
+            throw new InvalidOperationException("Next called before job selection");
 
-        await _page.Locator("#JobChange").SelectOptionAsync(new SelectOptionValue() { Label = SelectedJob });
+        var options = await GetSequenceOptions();
 
-        int retries = 0;
-        const int MAX_RETIES = 20;
+        _sequenceSearchSourceCache.Clear();
 
-        string[] options;
-        while (true) {
-            options = await _page.EvaluateAsync<string[]>(
-                @"() => [...document.getElementById(""SequenceChange"").getElementsByTagName(""option"")].slice(1).map(o => o.innerText);"
-            );
+        if (options is not null) 
+            _sequenceSearchSourceCache.AddRange(options);
+        
+        IsAtJob = false;
+    }
 
-            if (options.Length > 0)
-                break;
+    private async Task<string[]?> GetSequenceOptions() {
+        await Model.SelectOption(_page, "JobChange", SelectedJob!);
 
-            // silently fail if we can't get options
-            if (++retries > MAX_RETIES) {
-                _sequenceSearchSourceCache.Clear();
+        for (int retryCount = 0; retryCount < 20; retryCount++) {
+            var options = await _page.EvaluateAsync<string[]>(
+                "() => [...document.getElementById(\"SequenceChange\").getElementsByTagName(\"option\")].slice(1).map(o => o.innerText);");
 
-                IsAtJob = false;
-                return;
+            if (options is not null && options.Length > 0) {
+                return options;
             }
 
             await Task.Delay(25);
         }
 
-        _sequenceSearchSourceCache.Clear();
-        _sequenceSearchSourceCache.AddRange(options);
-
-        IsAtJob = false;
+        return null;
     }
 }
 

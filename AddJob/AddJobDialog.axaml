@@ -3,21 +3,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:z="clr-namespace:Zephyr"
+        xmlns:local="clr-namespace:Zephyr.AddJob;assembly=Zephyr"
+        x:Class="Zephyr.AddJob.AddJobDialog"
+        x:DataType="local:AddJobDialogViewModel"
+        x:CompileBindings="True"
         mc:Ignorable="d"
-        x:Class="Zephyr.Main.AddJob.AddJobDialog"
+        d:DataContext="{x:Static z:DesignData.AddJobDialogViewModel}"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaChromeHints="NoChrome"
         WindowStartupLocation="CenterOwner"
-        CanResize="False"
-        ShowInTaskbar="False"
-        Title="Zephyr - Add Job" Icon="/icon.ico"
-        Width="450" Height="300">
-  <Window.Resources>
-    <z:NegationConverter x:Key="negationConverter"/>
-  </Window.Resources>
+        CanResize="False" ShowInTaskbar="False"
+        Width="450" Height="300"
+        Title="Zephyr - Add Job" Icon="/icon.ico">
   <Panel>
     <ExperimentalAcrylicBorder IsHitTestVisible="False">
       <ExperimentalAcrylicBorder.Material>
@@ -31,49 +31,38 @@
     <DockPanel Margin="10">
       <DockPanel DockPanel.Dock="Bottom" Margin="0,5,0,0">
         <StackPanel Orientation="Horizontal" Spacing="5">
+          <Button IsVisible="{Binding !IsAtJob}"
+                  IsEnabled="{Binding IsOkEnabled}"
+                  Command="{Binding AddJob}">Ok</Button>
           <Button IsVisible="{Binding IsAtJob}"
                   Command="{Binding OnNext}"
                   IsEnabled="{Binding IsNextEnabled}">Next</Button>
-          <Button IsVisible="{
-                  Binding Path=IsAtJob, 
-                  Converter={StaticResource negationConverter}
-                }"
+          <Button IsVisible="{Binding !IsAtJob}"
                   Command="{Binding OnPrevious}">Previous</Button>
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Spacing="5"
-                    HorizontalAlignment="Right">
-          <Button IsVisible="{
-                  Binding Path=IsAtJob, 
-                  Converter={StaticResource negationConverter}
-                }"
-                  IsEnabled="{Binding IsOkEnabled}"
-                  Command="{Binding AddJob}">Ok</Button>
-          <Button Command="{Binding CancelAddJob}">Cancel</Button>
-        </StackPanel>
+        <Button HorizontalAlignment="Right" Command="{Binding CancelAddJob}">Cancel</Button>
       </DockPanel>
       <Panel>
         <DockPanel IsVisible="{Binding IsAtJob}">
           <StackPanel Spacing="5" Margin="0,0,0,5"
                       DockPanel.Dock="Top">
-            <TextBlock>Job</TextBlock>
+            <TextBlock FontSize="20" FontWeight="SemiBold">Job</TextBlock>
             <TextBox Watermark="Search" Text="{Binding JobSearchText}" />
           </StackPanel>
           <ListBox Items="{Binding JobSearchResults}"
-                   SelectedItem="{Binding SelectedJob}"/>
+                   SelectedItem="{Binding SelectedJob}"
+                   Background="Transparent" />
         </DockPanel>
-        <DockPanel IsVisible="{
-                  Binding Path=IsAtJob, 
-                  Converter={StaticResource negationConverter},
-                  FallbackValue=False
-                }">
+        <DockPanel IsVisible="{Binding !IsAtJob, FallbackValue=False}">
           <StackPanel Spacing="5" Margin="0,0,0,5"
                       DockPanel.Dock="Top">
-            <TextBlock>Sequence</TextBlock>
+            <TextBlock FontSize="20" FontWeight="SemiBold">Sequence</TextBlock>
             <TextBox Watermark="Search"
-                     Text="{Binding SequenceSearchText}"  />
+                     Text="{Binding SequenceSearchText}" />
           </StackPanel>
           <ListBox Items="{Binding SequenceSearchResults}"
-                   SelectedItem="{Binding SelectedSequence}" />
+                   SelectedItem="{Binding SelectedSequence}"
+                   Background="Transparent" />
         </DockPanel>
       </Panel>
     </DockPanel>

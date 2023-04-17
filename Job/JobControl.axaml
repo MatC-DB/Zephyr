@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:z="clr-namespace:Zephyr"
+             xmlns:local="clr-namespace:Zephyr.Job;assembly=Zephyr"
+             xmlns:main="clr-namespace:Zephyr.Main;assembly=Zephyr"
+             x:Class="Zephyr.Job.JobControl"
+             x:DataType="local:JobControlViewModel"
+             mc:Ignorable="d" 
+             d:DataContext="{x:Static z:DesignData.JobControlViewModel}"
+             d:DesignWidth="300">
+  <Border BorderBrush="#DD555555" BorderThickness="1"
+          CornerRadius="5" MaxWidth="300"
+          Margin="5" Background="#DD363636">
+    <StackPanel>
+      <StackPanel Orientation="Horizontal" Spacing="5" Margin="5,5,5,0">
+        <StackPanel.Styles>
+          <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+          </Style>
+        </StackPanel.Styles>
+        <TextBlock Text="{Binding JobCode}" />
+        <TextBlock Text="{Binding VisibleSequence}" />
+      </StackPanel>
+      <Border ToolTip.Tip="{Binding JobName}">
+        <TextBlock FontSize="16" FontWeight="SemiBold"
+                   TextTrimming="CharacterEllipsis"
+                   Text="{Binding JobName}"
+                   Margin="5,2,5,0" />
+      </Border>
+      <Border Background="#AA242424" Margin="0,5,0,0"
+              CornerRadius="0,0,5,5">
+        <DockPanel Margin="5">
+          <DockPanel.Styles>
+            <Style Selector="Button">
+              <Setter Property="Padding" Value="10,3" />
+              <Setter Property="FontSize" Value="12" />
+            </Style>
+          </DockPanel.Styles>
+          <StackPanel DockPanel.Dock="Right" Spacing="5"
+                      Orientation="Horizontal">
+            <Button VerticalAlignment="Stretch"
+                    Command="{Binding $parent[main:Main].ViewModel.OnJobDelete}"
+                    CommandParameter="{Binding $self.DataContext}">
+              <i:Icon Value="mdi-trash-can-outline" />
+            </Button>
+            <StackPanel Orientation="Horizontal">
+              <!-- Up is down and down is up (arrays don't mimic ui) -->
+              <Button Command="{Binding $parent[main:Main].ViewModel.OnJobMoveDown}"
+                      CommandParameter="{Binding $self.DataContext}"
+                      VerticalAlignment="Stretch"
+                      Padding="2,0,1,0"
+                      CornerRadius="3,0,0,3">
+                <i:Icon Value="mdi-arrow-up-thin" />
+              </Button>
+              <Button Command="{Binding $parent[main:Main].ViewModel.OnJobMoveUp}"
+                      CommandParameter="{Binding $self.DataContext}"
+                      VerticalAlignment="Stretch"
+                      Padding="1,0,2,0"
+                      CornerRadius="0,3,3,0">
+                <i:Icon Value="mdi-arrow-down-thin" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+          <Button Classes.highlight="{Binding IsActive}"
+                  Command="{Binding $parent[main:Main].ViewModel.OnJobSelect}"
+                  CommandParameter="{Binding $self.DataContext}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <i:Icon Value="mdi-check" />
+              <TextBlock>Select</TextBlock>
+            </StackPanel>
+          </Button>
+        </DockPanel>
+      </Border>
+    </StackPanel>
+  </Border>
+</UserControl>

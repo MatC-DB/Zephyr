@@ -1,35 +1,46 @@
-using Avalonia.Controls;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
 using System.Threading.Tasks;
-using Zephyr.Main.AddJob;
-using Zephyr.Main.Job;
+using ReactiveMarbles.ObservableEvents;
+using System.Reactive.Linq;
+using System;
+using Zephyr.Error;
+using Avalonia.Threading;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using Avalonia.Controls;
 
 namespace Zephyr;
 
 public partial class MainWindow : ReactiveWindow<MainWindowViewModel> {
     public MainWindow() {
         InitializeComponent();
-
-        this.WhenActivated(d => d(ViewModel!.ShowAddJobDialog.RegisterHandler(DoShowDialogAsync)));
     }
 
-    public MainWindow(MainWindowViewModel viewModel) : this() {
+    public MainWindow(MainWindowViewModel viewModel): this() {
         Position = viewModel.Position;
-        DataContext = viewModel;
+
+        ViewModel = viewModel;
+
+        RxApp.MainThreadScheduler.Schedule(async () => await ViewModel.OnLoad());
+
+        this.WhenActivated(d => d(ViewModel.ErrorDialog.RegisterHandler(ShowErrorDialogAsync)));
+
+        this.Events().PositionChanged
+            .Select((e) => e.Point).InvokeCommand(this, x => x.ViewModel!.SetPosition);
     }
 
-    protected void OnPositionChanged(object sender, PixelPointEventArgs e) {
-        if (WindowState == WindowState.Normal && ViewModel != null)
-            ViewModel.Position = e.Point;
-    }
+    private async Task ShowErrorDialogAsync(InteractionContext<Exception, Unit> interaction) {
+        ErrorDialogViewModel viewModel = new(interaction.Input);
 
-    private async Task DoShowDialogAsync(InteractionContext<AddJobDialogViewModel, JobControlViewModel?> interaction) {
-        var dialog = new AddJobDialog {
-            DataContext = interaction.Input
-        };
+        var result = await Dispatcher.UIThread.InvokeAsync(async () => {
+            ErrorDialog dialog = new() {
+                DataContext = viewModel
+            };
 
-        var result = await dialog.ShowDialog<JobControlViewModel?>(this);
+            return await dialog.ShowDialog<Unit>(this);
+        });
+
         interaction.SetOutput(result);
     }
 }

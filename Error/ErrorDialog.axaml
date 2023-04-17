@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:z="clr-namespace:Zephyr"
+        xmlns:local="clr-namespace:Zephyr.Error;assembly=Zephyr"
+        x:Class="Zephyr.Error.ErrorDialog"
+        x:DataType="local:ErrorDialogViewModel"
+        x:CompileBindings="True"
+        mc:Ignorable="d"
+        d:DataContext="{x:Static z:DesignData.ErrorDialogViewModel}"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        ExtendClientAreaChromeHints="NoChrome"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False" ShowInTaskbar="False"
+        Width="300" Height="120"
+        Title="Zephyr - Error" Icon="/icon.ico">
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+        BackgroundSource="Digger"
+        TintColor="Black"
+        TintOpacity="1"
+        MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    <StackPanel Margin="10" Spacing="5">
+      <TextBlock FontSize="20" 
+                 FontWeight="SemiBold"
+                 Foreground="#FF122E">An error occured.</TextBlock>
+      <TextBlock TextWrapping="Wrap">
+        You can report this error with the email button below
+      </TextBlock>
+      <DockPanel Margin="0,3,0,0">
+        <Button Command="{Binding Email}">Email</Button>
+        <Button HorizontalAlignment="Right"
+                Command="{Binding Close}">Close</Button>
+      </DockPanel>
+    </StackPanel>
+  </Panel>
+</Window>

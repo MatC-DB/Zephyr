@@ -1,26 +1,18 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Playwright;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Zephyr.Main.AddJob;
-using Zephyr.Main.Job;
+using Zephyr.Job;
+using System;
+using System.Reactive;
+using Avalonia;
 
 namespace Zephyr;
 
 [DataContract]
 public partial class MainWindowViewModel : ReactiveObject, IScreen {
-    public const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
-
-    private IPlaywright? _playWright;
-    private IBrowser? _browser;
-
-    private readonly Task<IPage> _getPage;
-
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+    private readonly Model _model;
 
     private readonly object _processesRunningLock = new();
     private int _processesRunning = 0;
@@ -30,99 +22,48 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
     [Reactive]
     public bool IsLoading { get; private set; } = false;
 
-    [Reactive, DataMember]
-    public string Username { get; set; } = string.Empty;
+    public Interaction<Exception, Unit> ErrorDialog { get; }
 
-    [Reactive, DataMember]
-    public string Password { get; set; } = string.Empty;
+    #region SavedData
+    [DataMember]
+    public string Username { get { return _model.Username; } set { _model.Username = value; } }
 
-    public Interaction<AddJobDialogViewModel, JobControlViewModel?> ShowAddJobDialog { get; }
+    [DataMember]
+    public string Password { get { return _model.Password; } set { _model.Password = value; } }
+
+    [DataMember]
+    public ObservableCollection<JobControlViewModel> Jobs { get { return _model.Jobs; } set { _model.Jobs = value; } }
+    #endregion
 
     public MainWindowViewModel() {
-        ShowAddJobDialog = new Interaction<AddJobDialogViewModel, JobControlViewModel?>();
+        ErrorDialog = new Interaction<Exception, Unit>();
 
-        Router.Navigate.Execute(new Login.LoginViewModel(this));
+        _model = new(ErrorDialog.Handle, IncrementProcessesRunning, DecrementProcessesRunning);
 
-        _getPage = GetPage();
+        SetPosition = ReactiveCommand.Create<PixelPoint>(HandlePosition);
 
-        Task.Run(async () => await _getPage);
+        Router.Navigate.Execute(new Login.LoginViewModel(this, _model));
     }
 
-    ~MainWindowViewModel() {
-        _playWright?.Dispose();
-        _semaphoreSlim.Dispose();
+    public async Task OnLoad() {
+        await _model.OnLoad();
+    }
+
+    private void IsLoadingCheck() {
+        IsLoading = _processesRunning > 0;
     }
 
     private void IncrementProcessesRunning() {
         lock (_processesRunningLock) {
             ++_processesRunning;
-            IsLoading = _processesRunning > 0;
+            IsLoadingCheck();
         }
     }
 
     private void DecrementProcessesRunning() {
         lock (_processesRunningLock) {
             --_processesRunning;
-            IsLoading = _processesRunning > 0;
-        }
-    }
-
-    public async Task<IPage> GetLockedPage() {
-        IncrementProcessesRunning();
-
-        var page = await _getPage;
-
-        await _semaphoreSlim.WaitAsync();
-
-        return page;
-    }
-
-    public void ReleasePage() {
-        _semaphoreSlim.Release();
-
-        DecrementProcessesRunning();
-    }
-
-    private async Task<IPage> GetPage() {
-        IncrementProcessesRunning();
-
-        _playWright ??= await Playwright.CreateAsync();
-
-#if DEBUG && false
-            _browser ??= await _playWright.Chromium.LaunchAsync(new() {
-                Headless = false,
-                SlowMo = 50,
-            });
-#else
-        _browser ??= await _playWright.Chromium.LaunchAsync();
-#endif
-
-        var page = await _browser.NewPageAsync();
-
-        Debug.WriteLine("[ZEPHYR]: Got page");
-
-        DecrementProcessesRunning();
-
-        return page;
-    }
-
-    private async Task Login(IPage page) {
-        await Zephyr.Login.LoginModel.Login(page, Username, Password);
-    }
-
-    public async Task RunTask(Func<IPage, Task> task, Func<Exception, bool>? tryHandleError = null) {
-        try {
-            var page = await GetLockedPage();
-
-            await Login(page);
-
-            await task(page);
-        }
-        catch (Exception e) {
-            tryHandleError?.Invoke(e);
-        }
-        finally {
-            ReleasePage();
+            IsLoadingCheck();
         }
     }
 }

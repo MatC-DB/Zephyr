@@ -6,18 +6,11 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Include="icon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="akavache" Version="9.1.7" />
     <PackageReference Include="Avalonia" Version="0.10.19" />
@@ -25,21 +18,18 @@
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.19" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.19" />
+    <PackageReference Include="MethodTimer.Fody" Version="3.2.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Playwright" Version="1.32.0" />
+    <PackageReference Include="Projektanker.Icons.Avalonia" Version="5.12.0" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.MaterialDesign" Version="5.12.0" />
+    <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.2.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="ReactiveUI.Fody" Version="18.4.26" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
-
   <ItemGroup>
-    <Resource Include="icon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Login\Login.axaml.cs">
-      <DependentUpon>Login.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Main\Main.axaml.cs">
-      <DependentUpon>Main.axaml</DependentUpon>
-    </Compile>
+    <AvaloniaResource Include="icon.ico" />
   </ItemGroup>
 </Project>

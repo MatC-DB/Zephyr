@@ -3,26 +3,30 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:z="clr-namespace:Zephyr"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
-             x:Class="Zephyr.Main.Main">
-  <UserControl.Resources>
-    <z:NegationConverter x:Key="negationConverter"/>
-  </UserControl.Resources>
+             xmlns:local="clr-namespace:Zephyr.Main;assembly=Zephyr"
+             x:Class="Zephyr.Main.Main"
+             x:DataType="local:MainViewModel"
+             x:CompileBindings="True"
+             mc:Ignorable="d"
+             d:DataContext="{x:Static z:DesignData.MainViewModel}"
+             d:DesignWidth="300" d:DesignHeight="400">
   <DockPanel>
     <StackPanel DockPanel.Dock="Top">
       <Panel Margin="0,0,0,2">
         <TextBlock FontSize="16">Clocking</TextBlock>
       </Panel>
-      <StackPanel Orientation="Horizontal" Spacing="5">
+      <StackPanel Orientation="Horizontal">
         <StackPanel.Styles>
-          <Style Selector="Button.on">
-            <Setter Property="BorderBrush" Value="#1693a5" />
-            <Setter Property="BorderThickness" Value="1" />
+          <Style Selector="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="Padding" Value="0,7" />
+            <Setter Property="Margin" Value="5" />
           </Style>
         </StackPanel.Styles>
-        <Button Classes.on="{Binding IsClockedIn}"
+        <Button Classes.highlight="{Binding IsClockedIn}"
                 Command="{Binding OnClockIn}">In</Button>
-        <Button Classes.on="{Binding IsClockedOut}"
+        <Button Classes.highlight="{Binding IsClockedOut}"
                 Command="{Binding OnClockOut}">Out</Button>
       </StackPanel>
       <StackPanel Orientation="Horizontal" Spacing="5"  Margin="0,5,0,2">
@@ -31,8 +35,24 @@
       </StackPanel>
     </StackPanel>
     <ScrollViewer>
-      <WrapPanel>
-      </WrapPanel>
+      <Panel>
+        <ItemsControl Items="{Binding Jobs}"
+                      IsVisible="{Binding IsViewportSmall}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <ItemsControl Items="{Binding Jobs}"
+                      IsVisible="{Binding !IsViewportSmall}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </Panel>
     </ScrollViewer>
   </DockPanel>
 </UserControl>

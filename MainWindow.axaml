@@ -2,20 +2,22 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Zephyr"
         xmlns:rxui="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
-        mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="450"
+        xmlns:z="clr-namespace:Zephyr"
         x:Class="Zephyr.MainWindow"
+        x:DataType="z:MainWindowViewModel"
+        x:CompileBindings="True"
+        mc:Ignorable="d"
+        d:DataContext="{x:Static z:DesignData.MainWindowViewModel}"
+        d:DesignWidth="350" d:DesignHeight="450"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
-        Title="Zephyr" Icon="/icon.ico"
         Width="{Binding Width, Mode=TwoWay}"
         Height="{Binding Height, Mode=TwoWay}"
         WindowState="{Binding State, Mode=TwoWay}"
         WindowStartupLocation="CenterScreen"
-        PositionChanged="OnPositionChanged"
-        >
+        Title="Zephyr" Icon="/icon.ico">
   <Panel>
     <ExperimentalAcrylicBorder IsHitTestVisible="False">
       <ExperimentalAcrylicBorder.Material>
@@ -33,7 +35,7 @@
           <TextBlock Foreground="Red" Text="Error, bad route encountered." />
         </rxui:RoutedViewHost.DefaultContent>
         <rxui:RoutedViewHost.ViewLocator>
-          <local:AppViewLocator />
+          <z:AppViewLocator />
         </rxui:RoutedViewHost.ViewLocator>
       </rxui:RoutedViewHost>
       <TextBlock IsVisible="{Binding IsLoading}"
