@@ -22,7 +22,7 @@
           </Style>
         </StackPanel.Styles>
         <TextBlock Text="{Binding JobCode}" />
-        <TextBlock Text="{Binding VisibleSequence}" />
+        <TextBlock Text="{Binding Sequence}" />
       </StackPanel>
       <Border ToolTip.Tip="{Binding JobName}">
         <TextBlock FontSize="16" FontWeight="SemiBold"

@@ -36,8 +36,6 @@ public class JobControlViewModel : ReactiveObject {
     [DataMember]
     public string Sequence { get; set; }
 
-    public string VisibleSequence { get { return Sequence.Split(" ", 2)[0]; } }
-
     [DataMember]
     public string SequenceValue { get; set; } = string.Empty;
 
