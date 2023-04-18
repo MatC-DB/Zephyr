@@ -40,8 +40,6 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
 
         _model = new(ErrorDialog.Handle, IncrementProcessesRunning, DecrementProcessesRunning);
 
-        SetPosition = ReactiveCommand.Create<PixelPoint>(HandlePosition);
-
         Router.Navigate.Execute(new Login.LoginViewModel(this, _model));
     }
 

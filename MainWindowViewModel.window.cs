@@ -23,21 +23,4 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
                 State = WindowState.Maximized;
         }
     }
-
-    public PixelPoint Position { get; set; } = new PixelPoint(50, 50);
-
-    [DataMember]
-    public int Top { get { return Position.Y; } set { Position = new PixelPoint(Position.X, value); } }
-
-    [DataMember]
-    public int Left { get { return Position.X; } set { Position = new PixelPoint(value, Position.Y); } }
-
-    public ICommand SetPosition { get; }
-
-    private void HandlePosition(PixelPoint position) {
-        if (State != WindowState.Normal)
-            return;
-
-        Position = position;
-    }
 }
