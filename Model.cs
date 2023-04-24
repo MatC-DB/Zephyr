@@ -7,6 +7,10 @@ using System.Reactive;
 using System.Collections.ObjectModel;
 using Zephyr.Job;
 using MethodTimer;
+using Zephyr.Settings;
+using System.Diagnostics;
+using System.Text.Json;
+using ReactiveMarbles.ObservableEvents;
 
 namespace Zephyr;
 
@@ -30,6 +34,8 @@ public partial class Model {
 
     public ObservableCollection<JobControlViewModel> Jobs { get; set; } = new();
 
+    public SettingsModel.Settings Settings { get; set; } = new() { ShowWorkAreas = true };
+
     public Model(
         Func<Exception, IObservable<Unit>> errorDialogHandler,
         Action incrementRunningProcesses,
@@ -41,6 +47,8 @@ public partial class Model {
     }
 
     ~Model() {
+        if (_browser is not null)
+            Task.Run(_browser.CloseAsync).Wait();
         _playWright?.Dispose();
         _semaphoreSlim.Dispose();
     }
@@ -66,7 +74,24 @@ public partial class Model {
         _browser ??= await _playWright.Chromium.LaunchAsync();
 #endif
 
-        _page ??= await _browser.NewPageAsync();
+        if(_page is null) {
+            _page = await _browser.NewPageAsync();
+
+#if DEBUG
+            _page.Events().Request.Subscribe(r => {
+                var request = r.Url[BASE_URL.Length..];
+
+                if (request.StartsWith("Scripts/") || request.StartsWith("Content/"))
+                    return;
+
+                if(string.IsNullOrWhiteSpace(request)) {
+                    request = "{ROOT}";
+                }
+
+                Debug.WriteLine($"[ZEPHYR] Request: \"{request}\"");
+            });
+#endif
+        }
 
         return _page;
     }
@@ -95,6 +120,9 @@ public partial class Model {
         }
         catch (Exception e) {
             if (tryHandleError == null || !tryHandleError.Invoke(e)) {
+#if DEBUG
+                Debug.WriteLine($"[ZEPHYR] {e.Message}\n{e.StackTrace}");
+#endif
                 await _errorDialogHandler(e);
             }
         }
@@ -103,5 +131,47 @@ public partial class Model {
 
             _decrementRunningProcesses();
         }
+    }
+
+    internal static async Task<IResponse> GetResponse(IPage page, Func<IPage, Task> action, string path, bool useStartsWith = false) {
+        var usedPath = BASE_URL + path;
+
+        var request = await page.RunAndWaitForRequestAsync(async () => {
+            await action(page);
+        }, (request) => {
+            if (useStartsWith)
+                return request.Url.StartsWith(usedPath);
+
+            return request.Url.Equals(usedPath);
+        });
+
+        // ensure server receives it
+        if (request.Failure is not null) {
+            throw new ResponseException("Request failed.");
+        }
+
+        var response = await request.ResponseAsync();
+
+        if (response is null || !response.Ok) {
+            throw new ResponseException("Response failed.");
+        }
+
+        return response;
+    }
+
+    internal static async Task<JsonElement> GetResponseJson(IPage page, Func<IPage, Task> action, string path) {
+        var response = await GetResponse(page, action, path);
+
+        var potentialJson = await response.JsonAsync();
+
+        if (!potentialJson.HasValue) {
+            throw new ResponseException("JSON failed.");
+        }
+
+        return potentialJson.Value;
+    }
+
+    public class ResponseException : Exception {
+        public ResponseException(string message) : base(message) { }
     }
 }

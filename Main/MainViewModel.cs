@@ -8,28 +8,50 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Zephyr.AddJob;
 using Zephyr.Job;
+using Zephyr.Settings;
 
 namespace Zephyr.Main;
 
 public class MainViewModel : ReactiveObject, IRoutableViewModel {
     private readonly Model _model;
 
+    #region RoutingParams
     public IScreen HostScreen { get; }
 
     public string UrlPathSegment { get; } = "CONTENT";
+    #endregion
 
-    [Reactive]
-    public bool IsClockedIn { get; private set; } = false;
+    #region ClockingAndSettingParams
+    private Model.Clocking? _clocking = null;
 
-    [Reactive]
-    public bool IsClockedOut { get; private set; } = false;
+    public bool IsClockedIn { get { return _clocking == Model.Clocking.In; } }
 
+    public bool IsClockedOut { get { return _clocking == Model.Clocking.Out; } }
+
+    public ReactiveCommand<Model.Clocking, Unit> OnClock { get; }
+
+    public ICommand OnRefresh { get; }
+
+    public Interaction<SettingsViewModel, SettingsModel.Settings> ShowSettingsDialog { get; }
+
+    public ICommand OnOpenSettings { get; }
+    #endregion
+
+    #region WorkAreaParams
+    private Model.WorkAreas? _workArea = null;
+
+    public bool IsOfficeSelected { get { return _workArea == Model.WorkAreas.Office; } }
+
+    public bool IsWfhSelected { get { return _workArea == Model.WorkAreas.Wfm; } }
+
+    public ReactiveCommand<Model.WorkAreas, Unit> OnWorkAreaSelected { get; }
+
+    public bool ShowWorkAreas { get { return _model.Settings.ShowWorkAreas; } }
+    #endregion
+
+    #region JobParams
     [Reactive]
     public string CurrentJobSequenceValue { get; private set; } = string.Empty;
-
-    public ICommand OnClockIn { get; }
-
-    public ICommand OnClockOut { get; }
 
     [Reactive]
     public bool IsViewportSmall { get; set; }
@@ -47,88 +69,120 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
     public ReactiveCommand<JobControlViewModel, Unit> OnJobMoveDown { get; }
 
     public Interaction<AddJobDialogViewModel, JobControlViewModel?> ShowAddJobDialog { get; }
+    #endregion
 
     public MainViewModel(IScreen screen, Model model) {
         _model = model;
 
+        // routing
         HostScreen = screen;
 
-        OnClockIn = ReactiveCommand.CreateFromTask(ClockIn);
-        OnClockOut = ReactiveCommand.CreateFromTask(ClockOut);
+        // clocking
+        OnClock = ReactiveCommand.CreateFromTask<Model.Clocking>(Clock);
 
+        // work areas
+        OnRefresh = ReactiveCommand.CreateFromTask(GetStatus);
+
+        OnWorkAreaSelected = ReactiveCommand.CreateFromTask<Model.WorkAreas>(SetWorkArea);
+
+        ShowSettingsDialog = new Interaction<SettingsViewModel, SettingsModel.Settings>();
+
+        OnOpenSettings = ReactiveCommand.CreateFromTask(OpenSettings);
+
+        // jobs
         ShowAddJobDialog = new Interaction<AddJobDialogViewModel, JobControlViewModel?>();
 
-        OnAddJob = ReactiveCommand.CreateFromTask(async () => {
-            await _model.RunTask(async (page) => {
-                var addJobDialog = new AddJobDialogViewModel(page);
-
-                var result = await ShowAddJobDialog.Handle(addJobDialog);
-
-                if (result is not null)
-                    Jobs.Add(result);
-            });
-        });
+        OnAddJob = ReactiveCommand.CreateFromTask(AddJob);
 
         OnJobDelete = ReactiveCommand.Create<JobControlViewModel>((model) => Jobs.Remove(model));
 
-        OnJobSelect = ReactiveCommand.CreateFromTask<JobControlViewModel>(async (model) => {
-            await _model.RunTask(async (page) => {
-                if (!(await Model.GetStatus(page)).IsClockedIn) {
-                    await Model.Clock(page, Model.Clocking.In);
+        OnJobSelect = ReactiveCommand.CreateFromTask<JobControlViewModel>(SelectJob);
 
-                    SetClockingStatus(true);
-
-                    for (int retry = 0; retry < 20; retry++) {
-                        if ((await Model.GetStatus(page)).IsClockedIn)
-                            break;
-
-                        await Task.Delay(25);
-                    }
-                }
-
-                await Model.OpenJobsPanel(page);
-
-                await Model.SelectJob(page, model.Job, model.Sequence);
-
-                CurrentJobSequenceValue = model.SequenceValue;
-            });
-        });
-
-        OnJobMoveUp = ReactiveCommand.Create<JobControlViewModel>((model) => JobMove(model, 1));
-        OnJobMoveDown = ReactiveCommand.Create<JobControlViewModel>((model) => JobMove(model, -1));
+        OnJobMoveUp = ReactiveCommand.Create<JobControlViewModel>((model) => MoveJob(model, 1));
+        OnJobMoveDown = ReactiveCommand.Create<JobControlViewModel>((model) => MoveJob(model, -1));
     }
 
-    private void JobMove(JobControlViewModel model, int moveAmount) {
-        int index = Jobs.IndexOf(model);
-        int newIndex = Math.Clamp(index + moveAmount, 0, Jobs.Count - 1);
-        Jobs.Move(index, newIndex);
+    private void SetWorkAreaStatus(Model.WorkAreas? status) {
+        _workArea = status;
+
+        this.RaisePropertyChanged(nameof(IsOfficeSelected));
+        this.RaisePropertyChanged(nameof(IsWfhSelected));
     }
 
-    private void SetClockingStatus(bool status) {
-        IsClockedIn = status;
-        IsClockedOut = !status;
+    private void SetClockingStatus(Model.Clocking? status) {
+        _clocking = status;
+
+        this.RaisePropertyChanged(nameof(IsClockedIn));
+        this.RaisePropertyChanged(nameof(IsClockedOut));
     }
 
     public async Task GetStatus() {
         await _model.RunTask(async (page) => {
             var status = await Model.GetStatus(page);
-            SetClockingStatus(status.IsClockedIn);
+            SetClockingStatus(status.IsClockedIn ? Model.Clocking.In : Model.Clocking.Out);
+            SetWorkAreaStatus(status.IsWfm ? Model.WorkAreas.Wfm : Model.WorkAreas.Office);
             CurrentJobSequenceValue = status.Sequence;
         });
-    }
-
-    private async Task ClockIn() {
-        await Clock(Model.Clocking.In);
-    }
-
-    private async Task ClockOut() {
-        await Clock(Model.Clocking.Out);
     }
 
     private async Task Clock(Model.Clocking type) {
         await _model.RunTask(async (page) => {
             await Model.Clock(page, type);
-            SetClockingStatus(type == Model.Clocking.In);
+
+            SetClockingStatus(type);
+        });
+    }
+
+    private async Task SetWorkArea(Model.WorkAreas area) {
+        await _model.RunTask(async (page) => {
+            await Model.EnsureClockedIn(page);
+
+            SetClockingStatus(Model.Clocking.In);
+
+            await Model.SetWorkArea(page, area);
+
+            SetWorkAreaStatus(area);
+        });
+    }
+
+    private async Task OpenSettings() {
+        var settingsDialog = new SettingsViewModel(_model.Settings);
+
+        var result = await ShowSettingsDialog.Handle(settingsDialog);
+
+        _model.Settings = result;
+
+        this.RaisePropertyChanged(nameof(ShowWorkAreas));
+    }
+
+    private async Task AddJob() {
+        await _model.RunTask(async (page) => {
+            var addJobDialog = new AddJobDialogViewModel(page);
+
+            var result = await ShowAddJobDialog.Handle(addJobDialog);
+
+            if (result is not null)
+                Jobs.Add(result);
+        });
+    }
+
+    private void MoveJob(JobControlViewModel model, int moveAmount) {
+        int index = Jobs.IndexOf(model);
+        int newIndex = Math.Clamp(index + moveAmount, 0, Jobs.Count - 1);
+        Jobs.Move(index, newIndex);
+    }
+
+    private async Task SelectJob(JobControlViewModel model) {
+        await _model.RunTask(async (page) => {
+            await Model.EnsureClockedIn(page);
+
+            SetClockingStatus(Model.Clocking.In);
+
+            await Model.OpenJobsPanel(page);
+
+            await Model.SelectJob(page, model.Job, model.Sequence);
+
+            CurrentJobSequenceValue = model.SequenceValue;
         });
     }
 }

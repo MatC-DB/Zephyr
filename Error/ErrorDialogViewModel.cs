@@ -1,24 +1,26 @@
-﻿using ReactiveUI;
+﻿using Avalonia;
+using ReactiveUI;
 using System;
-using System.Diagnostics;
 using System.Reactive;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Zephyr.Error;
 
 public class ErrorDialogViewModel {
-    private readonly string _message;
-    private readonly string _stackTrace;
+    public string Message { get; private set; }
 
-    public ICommand Email { get; }
+    public string StackTrace { get; private set; }
+
+    public ICommand OnCopy { get; }
 
     public ReactiveCommand<Unit, Unit> Close { get; }
 
     public ErrorDialogViewModel(string message, string stackTrace) {
-        _message = message;
-        _stackTrace = stackTrace;
+        Message = message;
+        StackTrace = stackTrace;
 
-        Email = ReactiveCommand.Create(EmailDetails);
+        OnCopy = ReactiveCommand.CreateFromTask<string>(Copy);
 
         Close = ReactiveCommand.Create(() => Unit.Default);
     }
@@ -27,18 +29,10 @@ public class ErrorDialogViewModel {
 
     }
 
-    private void EmailDetails() {
-        // this is a new line
-        const string N = "%0D%0A";
+    private async Task Copy(string message) {
+        if (Application.Current is null || Application.Current.Clipboard is null)
+            return;
 
-        const string BASE_EMAIL =
-            "mailto:mathew.cooper@dbbroadcast.co.uk" +
-            "?subject=Zephyr&body=" +
-            $"Hi,{N}{N}An error has occured with Zephyr.  The actions I took to produce this error is the follwing:{N}" +
-            $"<Put your actions here>{N}{N}";
-
-        var email = BASE_EMAIL + $"ErrorMessage:{N}{_message}{N}{N}StackTrace:{N}{_stackTrace}";
-
-        Process.Start(new ProcessStartInfo(email) { UseShellExecute = true } );
+        await Application.Current.Clipboard.SetTextAsync(message);
     }
 }

@@ -21,8 +21,20 @@ public class AddJobDialogViewModel : ReactiveObject {
     public bool IsAtJob { get; set; } = true;
 
     public ICommand OnNext { get; }
+
+    private readonly ObservableAsPropertyHelper<bool> _isNextEnabled;
+    public bool IsNextEnabled => _isNextEnabled.Value;
+
     public ICommand OnPrevious { get; }
 
+    public ReactiveCommand<Unit, JobControlViewModel?> CancelAddJob { get; }
+
+    private readonly ObservableAsPropertyHelper<bool> _isOkEnabled;
+    public bool IsOkEnabled => _isOkEnabled.Value;
+
+    public ReactiveCommand<Unit, JobControlViewModel?> AddJob { get; }
+
+    #region Job
     [Reactive]
     public string JobSearchText { get; set; } = "";
 
@@ -33,10 +45,9 @@ public class AddJobDialogViewModel : ReactiveObject {
 
     [Reactive]
     public string? SelectedJob { get; set; } = null;
+    #endregion
 
-    private readonly ObservableAsPropertyHelper<bool> _isNextEnabled;
-    public bool IsNextEnabled => _isNextEnabled.Value;
-
+    #region Sequence
     [Reactive]
     public string SequenceSearchText { get; set; } = "";
 
@@ -47,39 +58,18 @@ public class AddJobDialogViewModel : ReactiveObject {
 
     [Reactive]
     public string? SelectedSequence { get; set; } = null;
-
-    private readonly ObservableAsPropertyHelper<bool> _isOkEnabled;
-    public bool IsOkEnabled => _isOkEnabled.Value;
-
-    public bool IsOk { get; private set; }
-
-    public ReactiveCommand<Unit, JobControlViewModel?> AddJob { get; }
-    public ReactiveCommand<Unit, JobControlViewModel?> CancelAddJob { get; }
+    #endregion
 
     public AddJobDialogViewModel(IPage page) {
         _page = page;
 
-        CancelAddJob = ReactiveCommand.Create<JobControlViewModel?>(() => {
-            return null;
-        });
-
-        BuildFilteredData(ref _jobSearchSourceCache, vm => vm.JobSearchText, out _jobSearchResults);
-
-        this.WhenValueChanged(vm => vm.SelectedJob)
-            .Select(job => job != null)
-            .ToProperty(this, vm => vm.IsNextEnabled, out _isNextEnabled);
-
         OnNext = ReactiveCommand.CreateFromTask(Next);
 
-        OnPrevious = ReactiveCommand.Create(() => IsAtJob = true);
+        OnPrevious = ReactiveCommand.Create(() => { IsAtJob = true; });
 
-        BuildFilteredData(ref _sequenceSearchSourceCache, vm => vm.SequenceSearchText, out _sequenceSearchResults);
+        CancelAddJob = ReactiveCommand.Create<JobControlViewModel?>(() => null);
 
-        this.WhenValueChanged(vm => vm.SelectedSequence)
-            .Select(sequence => sequence != null)
-            .ToProperty(this, vm => vm.IsOkEnabled, out _isOkEnabled);
-
-        AddJob = ReactiveCommand.CreateFromTask<JobControlViewModel?>(async() => {
+        AddJob = ReactiveCommand.CreateFromTask<JobControlViewModel?>(async () => {
             if (SelectedJob == null || SelectedSequence == null)
                 throw new InvalidOperationException("Can't add job without having selected job and sequence");
 
@@ -89,6 +79,18 @@ public class AddJobDialogViewModel : ReactiveObject {
 
             return new JobControlViewModel(SelectedJob, SelectedSequence, value);
         });
+
+        BuildFilteredData(ref _jobSearchSourceCache, vm => vm.JobSearchText, out _jobSearchResults);
+
+        this.WhenValueChanged(vm => vm.SelectedJob)
+            .Select(job => job != null)
+            .ToProperty(this, vm => vm.IsNextEnabled, out _isNextEnabled);
+
+        BuildFilteredData(ref _sequenceSearchSourceCache, vm => vm.SequenceSearchText, out _sequenceSearchResults);
+
+        this.WhenValueChanged(vm => vm.SelectedSequence)
+            .Select(sequence => sequence != null)
+            .ToProperty(this, vm => vm.IsOkEnabled, out _isOkEnabled);
     }
 
     private void BuildFilteredData(
@@ -100,8 +102,8 @@ public class AddJobDialogViewModel : ReactiveObject {
             this.WhenValueChanged(filterPropertyAccessor)
                 .Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
                 .Select<string?, Func<string, bool>>(filter =>
-                    (string item) => 
-                        string.IsNullOrEmpty(filter) 
+                    (item) =>
+                        string.IsNullOrEmpty(filter)
                         || item.Contains(filter, StringComparison.InvariantCultureIgnoreCase)
                 );
 
@@ -130,28 +132,18 @@ public class AddJobDialogViewModel : ReactiveObject {
         var options = await GetSequenceOptions();
 
         _sequenceSearchSourceCache.Clear();
+        _sequenceSearchSourceCache.AddRange(options);
 
-        if (options is not null) 
-            _sequenceSearchSourceCache.AddRange(options);
-        
         IsAtJob = false;
     }
 
-    private async Task<string[]?> GetSequenceOptions() {
-        await Model.SelectOption(_page, "JobChange", SelectedJob!);
+    private async Task<string[]> GetSequenceOptions() {
+        await Model.GetResponse(_page, async (page) => {
+            await Model.SelectOption(_page, "JobChange", SelectedJob!);
+        }, "JobCosting/GetSequences", true);
 
-        for (int retryCount = 0; retryCount < 20; retryCount++) {
-            var options = await _page.EvaluateAsync<string[]>(
+        return await _page.EvaluateAsync<string[]>(
                 "() => [...document.getElementById(\"SequenceChange\").getElementsByTagName(\"option\")].slice(1).map(o => o.innerText);");
-
-            if (options is not null && options.Length > 0) {
-                return options;
-            }
-
-            await Task.Delay(25);
-        }
-
-        return null;
     }
 }
 

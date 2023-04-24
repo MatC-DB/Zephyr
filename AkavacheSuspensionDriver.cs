@@ -8,7 +8,13 @@ namespace Zephyr;
 public class AkavacheSuspensionDriver : ISuspensionDriver {
     private const string AppStateKey = "appState";
 
-    public AkavacheSuspensionDriver() => BlobCache.ApplicationName = "Zephyr";
+    public AkavacheSuspensionDriver() {
+#if DEBUG
+        BlobCache.ApplicationName = "ZephyrDebug";
+#else
+        BlobCache.ApplicationName = "Zephyr";
+#endif
+    }
 
     public IObservable<Unit> InvalidateState() => BlobCache.Secure.InvalidateObject<MainWindowViewModel>(AppStateKey);
 

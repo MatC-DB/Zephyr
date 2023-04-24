@@ -1,10 +1,20 @@
 ﻿using MethodTimer;
 using Microsoft.Playwright;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Zephyr;
 
 public partial class Model {
+    public static async Task GetClockingPanel(IPage page) {
+        await page.GotoAsync(BASE_URL);
+
+        // click the header button
+        await GetResponse(page, async (page) => {
+            await page.EvaluateAsync(@"() => document.getElementsByName(""ClockModuleDisplay"")[0].click();");
+        }, "Clocking/ClockingModule");
+    }
+
     public enum Clocking {
         In,
         Out
@@ -14,73 +24,37 @@ public partial class Model {
     public static async Task Clock(IPage page, Clocking type) {
         var isClockingIn = type == Clocking.In;
 
-        await page.GotoAsync(BASE_URL);
+        await GetClockingPanel(page);
 
-        await page.EvaluateAsync(@"() => document.getElementsByName(""ClockModuleDisplay"")[0].click();");
+        // click the appropriate button
+        var json = await GetResponseJson(page, async (page) => {
+            await page.GetByText(isClockingIn ? "Clock In" : "Clock Out").ClickAsync();
+        }, "Clocking/ClockAction");
 
-        await page.GetByText(isClockingIn ? "Clock In" : "Clock Out").ClickAsync();
+        var responseValue = json.GetProperty("WorkingTasksResponse").GetString();
 
-        // TODO: Could check for if its successful using on page text
-    }
+        if (responseValue is null || !responseValue.EndsWith("successfully")) {
+#if DEBUG
+            Debug.WriteLine($"[ZEPHYR] Json at error: {json}");
+#endif
 
-    private const string GET_TODAYS_EVENTS = @"() => {
-        const resultsChildren = document.getElementById(""Result"").children;
-        const clockingRecords = resultsChildren[resultsChildren.length - 1];
-
-        if(clockingRecords.tagName !== ""DIV"") return false;
-
-        const date = (""0"" + (new Date()).getDate()).slice(-2);
-
-        const todaysEvents = 
-            [...clockingRecords.getElementsByTagName(""tr"")].slice(1)
-            .map((row) => [...row.getElementsByTagName(""td"")])
-            .filter(([clock]) => clock.innerText.startsWith(date));
-
-        return todaysEvents;
-    }";
-
-    private const string GET_CLOCKING = @"(todaysEvents) => {
-        const actionsForToday = todaysEvents.map(([, action,]) => action.innerText);
-
-        if(!actionsForToday.length) return false;
-
-        const lastIn = actionsForToday.findLastIndex(action => action === ""IN"");
-
-        if(lastIn < 0) return false;
-
-        const lastOut = actionsForToday.findLastIndex(action => action === ""OUT"");
-
-        if(lastOut < 0) return true;
-
-        return lastIn > lastOut;
-    }";
-
-    private const string GET_SEQUENCE = @"(todaysEvents) => {
-        if(!todaysEvents.length) return """";
-
-        const lastItem = todaysEvents[todaysEvents.length - 1];
-        
-        return lastItem[3].innerText;
-    }";
-
-    public struct Status {
-        public bool IsClockedIn;
-        public string Sequence;
+            throw new ResponseException("Response value failed");
+        }
     }
 
     [Time]
-    public static async Task<Status> GetStatus(IPage page) {
-        await page.GotoAsync(BASE_URL + "Information");
+    public static async Task EnsureClockedIn(IPage page) {
+        if (!await GetClockingStatus(page)) {
+            await Clock(page, Clocking.In);
 
-        var todaysEvents = await page.EvaluateHandleAsync(GET_TODAYS_EVENTS);
+            // even though the response still comes back good
+            // we need to make sure the backend actually catches us
+            for (int retry = 0; retry < 20; ++retry) { 
+                await Task.Delay(25);
 
-        var isClockedIn = await page.EvaluateAsync<bool>(GET_CLOCKING, todaysEvents);
-
-        var sequence = await page.EvaluateAsync<string>(GET_SEQUENCE, todaysEvents);
-
-        return new Status() {
-            IsClockedIn = isClockedIn,
-            Sequence = sequence
-        };
+                if (await GetClockingStatus(page))
+                    break;
+            }
+        }
     }
 }

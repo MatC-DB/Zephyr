@@ -1,8 +1,6 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using ReactiveUI;
 using System.Runtime.Serialization;
-using System.Windows.Input;
 
 namespace Zephyr;
 

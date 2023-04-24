@@ -6,7 +6,7 @@ using ReactiveUI.Fody.Helpers;
 using Zephyr.Job;
 using System;
 using System.Reactive;
-using Avalonia;
+using Zephyr.Settings;
 
 namespace Zephyr;
 
@@ -33,6 +33,9 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
 
     [DataMember]
     public ObservableCollection<JobControlViewModel> Jobs { get { return _model.Jobs; } set { _model.Jobs = value; } }
+
+    [DataMember]
+    public SettingsModel.Settings Settings { get { return _model.Settings; } set { _model.Settings = value; } }
     #endregion
 
     public MainWindowViewModel() {
