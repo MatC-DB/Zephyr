@@ -43,7 +43,7 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
 
         _model = new(ErrorDialog.Handle, IncrementProcessesRunning, DecrementProcessesRunning);
 
-        Router.Navigate.Execute(new Login.LoginViewModel(this, _model));
+        Router.Navigate.Execute(new Login.LoginViewModel(this, _model, TriggerSave));
     }
 
     public async Task OnLoad() {
@@ -66,5 +66,10 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
             --_processesRunning;
             IsLoadingCheck();
         }
+    }
+
+    private void TriggerSave() {
+        AkavacheSuspensionDriver suspensionDriver = new();
+        suspensionDriver.SaveState(this).Subscribe();
     }
 }

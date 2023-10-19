@@ -9,8 +9,7 @@
         x:CompileBindings="True"
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.AddJobDialogViewModel}"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="Transparent"
+        Background="#2d2d2f"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaChromeHints="NoChrome"
@@ -18,16 +17,6 @@
         CanResize="False" ShowInTaskbar="False"
         Width="450" Height="300"
         Title="Zephyr - Add Job" Icon="/icon.ico">
-  <Panel>
-    <ExperimentalAcrylicBorder IsHitTestVisible="False">
-      <ExperimentalAcrylicBorder.Material>
-        <ExperimentalAcrylicMaterial
-        BackgroundSource="Digger"
-        TintColor="Black"
-        TintOpacity="1"
-        MaterialOpacity="0.65" />
-      </ExperimentalAcrylicBorder.Material>
-    </ExperimentalAcrylicBorder>
     <DockPanel Margin="10">
       <DockPanel DockPanel.Dock="Bottom" Margin="0,5,0,0">
         <StackPanel Orientation="Horizontal" Spacing="5">
@@ -47,24 +36,51 @@
           <StackPanel Spacing="5" Margin="0,0,0,5"
                       DockPanel.Dock="Top">
             <TextBlock FontSize="20" FontWeight="SemiBold">Job</TextBlock>
-            <TextBox Watermark="Search" Text="{Binding JobSearchText}" />
+            <TextBox Name="JobSearchBox" 
+                     AttachedToVisualTree="OnJobAttached" 
+                     Watermark="Search" 
+                     Text="{Binding JobSearchText}" />
           </StackPanel>
           <ListBox Items="{Binding JobSearchResults}"
                    SelectedItem="{Binding SelectedJob}"
-                   Background="Transparent" />
+                   Background="Transparent">
+            <ListBox.Styles>
+              <Style Selector="ListBoxItem">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              </Style>
+            </ListBox.Styles>
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}" Padding="14" Background="Transparent" DoubleTapped="OnJobDoubleClick" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
         </DockPanel>
         <DockPanel IsVisible="{Binding !IsAtJob, FallbackValue=False}">
           <StackPanel Spacing="5" Margin="0,0,0,5"
                       DockPanel.Dock="Top">
             <TextBlock FontSize="20" FontWeight="SemiBold">Sequence</TextBlock>
-            <TextBox Watermark="Search"
+            <TextBox Name="SequenceSearchBox" 
+                     Watermark="Search"
                      Text="{Binding SequenceSearchText}" />
           </StackPanel>
           <ListBox Items="{Binding SequenceSearchResults}"
                    SelectedItem="{Binding SelectedSequence}"
-                   Background="Transparent" />
+                   Background="Transparent">
+            <ListBox.Styles>
+              <Style Selector="ListBoxItem">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              </Style>
+            </ListBox.Styles>
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}" Padding="14" Background="Transparent" DoubleTapped="OnSequenceDoubleClick" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
         </DockPanel>
       </Panel>
     </DockPanel>
-  </Panel>
 </Window>

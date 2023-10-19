@@ -10,24 +10,13 @@
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.MainWindowViewModel}"
         d:DesignWidth="350" d:DesignHeight="450"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="Transparent"
+        Background="#2d2d2f"
         ExtendClientAreaToDecorationsHint="True"
         Width="{Binding Width, Mode=TwoWay}"
         Height="{Binding Height, Mode=TwoWay}"
         WindowState="{Binding State, Mode=TwoWay}"
         WindowStartupLocation="CenterScreen"
         Title="Zephyr" Icon="/icon.ico">
-  <Panel>
-    <ExperimentalAcrylicBorder IsHitTestVisible="False">
-      <ExperimentalAcrylicBorder.Material>
-        <ExperimentalAcrylicMaterial
-        BackgroundSource="Digger"
-        TintColor="Black"
-        TintOpacity="1"
-        MaterialOpacity="0.65" />
-      </ExperimentalAcrylicBorder.Material>
-    </ExperimentalAcrylicBorder>
     <Panel Margin="40">
       <rxui:RoutedViewHost Router="{Binding Router}"
                            PageTransition="{x:Null}">
@@ -43,5 +32,4 @@
                  VerticalAlignment="Bottom"
                  ZIndex="1000">Loading...</TextBlock>
     </Panel>
-  </Panel>
 </Window>

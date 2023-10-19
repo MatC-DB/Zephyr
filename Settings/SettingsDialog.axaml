@@ -9,8 +9,7 @@
         x:CompileBindings="True"
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.SettingsViewModel}"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="Transparent"
+        Background="#2d2d2f"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaChromeHints="NoChrome"
@@ -18,16 +17,6 @@
         CanResize="False" ShowInTaskbar="False"
         Width="350" Height="130"
         Title="Zephyr - Settings" Icon="/icon.ico">
-  <Panel>
-    <ExperimentalAcrylicBorder IsHitTestVisible="False">
-      <ExperimentalAcrylicBorder.Material>
-        <ExperimentalAcrylicMaterial
-        BackgroundSource="Digger"
-        TintColor="Black"
-        TintOpacity="1"
-        MaterialOpacity="0.65" />
-      </ExperimentalAcrylicBorder.Material>
-    </ExperimentalAcrylicBorder>
     <DockPanel Margin="10">
       <Button DockPanel.Dock="Bottom" 
               HorizontalAlignment="Right"
@@ -41,5 +30,4 @@
         </StackPanel>
       </StackPanel>
     </DockPanel>
-  </Panel>
 </Window>

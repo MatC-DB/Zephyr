@@ -2,6 +2,7 @@
 using ReactiveUI;
 using System;
 using System.Reactive;
+using System.Reactive.Linq;
 
 namespace Zephyr;
 
@@ -16,7 +17,7 @@ public class AkavacheSuspensionDriver : ISuspensionDriver {
 #endif
     }
 
-    public IObservable<Unit> InvalidateState() => BlobCache.Secure.InvalidateObject<MainWindowViewModel>(AppStateKey);
+    public IObservable<Unit> InvalidateState() => Observable.Start(() => { });
 
 #pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
     public IObservable<object> LoadState() => BlobCache.Secure.GetObject<MainWindowViewModel>(AppStateKey);

@@ -14,6 +14,7 @@ namespace Zephyr.Main;
 
 public class MainViewModel : ReactiveObject, IRoutableViewModel {
     private readonly Model _model;
+    private readonly Action _triggerSave;
 
     #region RoutingParams
     public IScreen HostScreen { get; }
@@ -71,8 +72,9 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
     public Interaction<AddJobDialogViewModel, JobControlViewModel?> ShowAddJobDialog { get; }
     #endregion
 
-    public MainViewModel(IScreen screen, Model model) {
+    public MainViewModel(IScreen screen, Model model, Action triggerSave) {
         _model = model;
+        _triggerSave = triggerSave;
 
         // routing
         HostScreen = screen;
@@ -94,7 +96,11 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
         OnAddJob = ReactiveCommand.CreateFromTask(AddJob);
 
-        OnJobDelete = ReactiveCommand.Create<JobControlViewModel>((model) => Jobs.Remove(model));
+        OnJobDelete = ReactiveCommand.Create<JobControlViewModel>((model) => {
+            Jobs.Remove(model);
+
+            _triggerSave();
+        });
 
         OnJobSelect = ReactiveCommand.CreateFromTask<JobControlViewModel>(SelectJob);
 
@@ -114,6 +120,11 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
         this.RaisePropertyChanged(nameof(IsClockedIn));
         this.RaisePropertyChanged(nameof(IsClockedOut));
+
+        if (status == Model.Clocking.Out) {
+            CurrentJobSequenceValue = string.Empty;
+            this.RaisePropertyChanged(nameof(CurrentJobSequenceValue));
+        }
     }
 
     public async Task GetStatus() {
@@ -163,6 +174,8 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
             if (result is not null)
                 Jobs.Add(result);
+
+            _triggerSave();
         });
     }
 
@@ -170,6 +183,8 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
         int index = Jobs.IndexOf(model);
         int newIndex = Math.Clamp(index + moveAmount, 0, Jobs.Count - 1);
         Jobs.Move(index, newIndex);
+
+        _triggerSave();
     }
 
     private async Task SelectJob(JobControlViewModel model) {

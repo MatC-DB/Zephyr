@@ -19,7 +19,11 @@ public partial class Model {
     [Time]
     public static async Task SelectJob(IPage page, string job, string sequence) {
         await GetResponse(page, async (page) => {
-            await SelectOption(page, "JobChange", job);
+            var value = await page.EvaluateAsync<string>(
+                "(sequence) => ([...document.getElementById(\"JobChange\").getElementsByTagName(\"option\")]" +
+                ".slice(1).find(o => o.innerText === sequence)).value;", job);
+
+            await Model.SelectOptionByValue(page, "JobChange", value);
         }, "JobCosting/GetSequences", true);
 
         await SelectOption(page, "SequenceChange", sequence);
@@ -40,7 +44,11 @@ public partial class Model {
     }
 
     public static async Task SelectOption(IPage page, string id, string label) {
-        await page.Locator("#" + id).SelectOptionAsync(new SelectOptionValue() { Label = label.Trim() });
+        await page.Locator("#" + id).SelectOptionAsync(new [] { label.Trim() });
+    }
+
+    public static async Task SelectOptionByValue(IPage page, string id, string value) {
+        await page.Locator("#" + id).SelectOptionAsync(new SelectOptionValue() { Value=value});
     }
 
     public class JobException : Exception {

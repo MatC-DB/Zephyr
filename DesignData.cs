@@ -45,9 +45,9 @@ internal class DesignData {
 
     public static JobControlViewModel JobControlViewModel => _jobs[0];
 
-    public static MainViewModel MainViewModel => new(MainWindowViewModel, _model);
+    public static MainViewModel MainViewModel => new(MainWindowViewModel, _model, () => { });
 
-    public static LoginViewModel LoginViewModel => new(MainWindowViewModel, _model);
+    public static LoginViewModel LoginViewModel => new(MainWindowViewModel, _model, () => { });
 
     public static SettingsViewModel SettingsViewModel => new(new SettingsModel.Settings() {
         ShowWorkAreas = true,

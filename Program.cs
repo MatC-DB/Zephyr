@@ -3,6 +3,9 @@ using Avalonia.ReactiveUI;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.MaterialDesign;
 using System;
+using System.Threading.Tasks;
+using Zephyr.Error;
+using ReactiveMarbles.ObservableEvents;
 
 namespace Zephyr;
 
@@ -12,8 +15,9 @@ class Program {
     // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args)
-        => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
- 
+         => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+
+
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()

@@ -69,16 +69,7 @@ public class AddJobDialogViewModel : ReactiveObject {
 
         CancelAddJob = ReactiveCommand.Create<JobControlViewModel?>(() => null);
 
-        AddJob = ReactiveCommand.CreateFromTask<JobControlViewModel?>(async () => {
-            if (SelectedJob == null || SelectedSequence == null)
-                throw new InvalidOperationException("Can't add job without having selected job and sequence");
-
-            var value = await _page.EvaluateAsync<string>(
-                "(sequence) => ([...document.getElementById(\"SequenceChange\").getElementsByTagName(\"option\")]" +
-                ".slice(1).find(o => o.innerText === sequence)).value;", SelectedSequence);
-
-            return new JobControlViewModel(SelectedJob, SelectedSequence, value);
-        });
+        AddJob = ReactiveCommand.CreateFromTask(OnAddJob);
 
         BuildFilteredData(ref _jobSearchSourceCache, vm => vm.JobSearchText, out _jobSearchResults);
 
@@ -91,6 +82,17 @@ public class AddJobDialogViewModel : ReactiveObject {
         this.WhenValueChanged(vm => vm.SelectedSequence)
             .Select(sequence => sequence != null)
             .ToProperty(this, vm => vm.IsOkEnabled, out _isOkEnabled);
+    }
+
+    public async Task<JobControlViewModel?> OnAddJob() {
+        if (SelectedJob == null || SelectedSequence == null)
+            throw new InvalidOperationException("Can't add job without having selected job and sequence");
+
+        var value = await _page.EvaluateAsync<string>(
+            "(sequence) => ([...document.getElementById(\"SequenceChange\").getElementsByTagName(\"option\")]" +
+            ".slice(1).find(o => o.innerText === sequence)).value;", SelectedSequence);
+
+        return new JobControlViewModel(SelectedJob, SelectedSequence, value);
     }
 
     private void BuildFilteredData(
@@ -139,7 +141,12 @@ public class AddJobDialogViewModel : ReactiveObject {
 
     private async Task<string[]> GetSequenceOptions() {
         await Model.GetResponse(_page, async (page) => {
-            await Model.SelectOption(_page, "JobChange", SelectedJob!);
+            //await Model.SelectOption(_page, "JobChange", SelectedJob!);
+            var value = await page.EvaluateAsync<string>(
+                "(sequence) => ([...document.getElementById(\"JobChange\").getElementsByTagName(\"option\")]" +
+                ".slice(1).find(o => o.innerText === sequence)).value;", SelectedJob);
+
+            await Model.SelectOptionByValue(page, "JobChange", value);
         }, "JobCosting/GetSequences", true);
 
         return await _page.EvaluateAsync<string[]>(

@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -8,6 +9,7 @@ namespace Zephyr.Login;
 
 public class LoginViewModel : ReactiveObject, IRoutableViewModel {
     private readonly Model _model;
+    private readonly Action _triggerSave;
 
     public IScreen HostScreen { get; }
 
@@ -24,9 +26,10 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
 
     public ICommand OnLogin { get; }
 
-    public LoginViewModel(IScreen screen, Model model) {
+    public LoginViewModel(IScreen screen, Model model, Action triggerSave) {
         HostScreen = screen;
         _model = model;
+        _triggerSave = triggerSave;
 
         OnLogin = ReactiveCommand.CreateFromTask(Login);
     }
@@ -34,9 +37,11 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
     private async Task Login() {
         await _model.RunTask(
             async (page) => {
-                HostScreen.Router.Navigate.Execute(new Main.MainViewModel(HostScreen, _model));
+                HostScreen.Router.Navigate.Execute(new Main.MainViewModel(HostScreen, _model, _triggerSave));
 
                 await Task.CompletedTask;
+
+                _triggerSave();
             },
             (error) => {
                 if (error is not Model.LoginException) {

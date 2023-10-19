@@ -14,46 +14,19 @@
   <Panel>
     <DockPanel>
       <WrapPanel DockPanel.Dock="Top">
-        <StackPanel Margin="0,0,5,2">
-          <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock FontSize="16">Clocking</TextBlock>
-            <Menu Height="16">
-              <MenuItem CornerRadius="5" Padding="1">
-                <MenuItem.Header>
-                  <i:Icon Value="mdi-cog-outline" 
-                          Height="14" Width="14" />
-                </MenuItem.Header>
-                <MenuItem Command="{Binding OnOpenSettings}"
-                          Header="_Settings">
-                  <MenuItem.Icon>
-                    <i:Icon Value="mdi-cog-outline" />
-                  </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Command="{Binding OnRefresh}"
-                          Header="_Refresh">
-                  <MenuItem.Icon>
-                    <i:Icon Value="mdi-refresh" />
-                  </MenuItem.Icon>
-                </MenuItem>
-              </MenuItem>
-            </Menu>
-          </StackPanel>
-          <StackPanel Orientation="Horizontal">
-            <StackPanel.Styles>
-              <Style Selector="Button">
-                <Setter Property="HorizontalContentAlignment" Value="Center" />
-                <Setter Property="Width" Value="60" />
-                <Setter Property="Padding" Value="0,7" />
-                <Setter Property="Margin" Value="5" />
-              </Style>
-            </StackPanel.Styles>
-            <Button Classes.highlight="{Binding IsClockedIn}"
-                    Command="{Binding OnClock}"
-                    CommandParameter="{x:Static local:MainBindings.ClockIn}">In</Button>
-            <Button Classes.highlight="{Binding IsClockedOut}"
-                    Command="{Binding OnClock}"
-                    CommandParameter="{x:Static local:MainBindings.ClockOut}">Out</Button>
-          </StackPanel>
+        <StackPanel Margin="0,0,15,2">
+          <StackPanel.Styles>
+            <Style Selector="Button">
+              <Setter Property="HorizontalContentAlignment" Value="Center" />
+              <Setter Property="Width" Value="60" />
+              <Setter Property="Padding" Value="10,7" />
+              <Setter Property="Margin" Value="5" />
+            </Style>
+          </StackPanel.Styles>
+          <TextBlock FontSize="16">Clocking</TextBlock>
+          <Button Classes.highlight="{Binding IsClockedOut}"
+                  Command="{Binding OnClock}"
+                  CommandParameter="{x:Static local:MainBindings.ClockOut}">Out</Button>
         </StackPanel>
         <StackPanel Margin="0,0,5,2" IsVisible="{Binding ShowWorkAreas}">
           <TextBlock FontSize="16">Work Area</TextBlock>
@@ -77,6 +50,26 @@
       <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="5" Margin="0,0,0,2">
         <TextBlock FontSize="16" VerticalAlignment="Bottom">Jobs</TextBlock>
         <Button Padding="4,0" Command="{Binding OnAddJob}">+</Button>
+        <Menu Height="16">
+          <MenuItem CornerRadius="5" Padding="1">
+            <MenuItem.Header>
+              <i:Icon Value="mdi-cog-outline"
+                      Height="14" Width="14" />
+            </MenuItem.Header>
+            <MenuItem Command="{Binding OnOpenSettings}"
+                      Header="_Settings">
+              <MenuItem.Icon>
+                <i:Icon Value="mdi-cog-outline" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Command="{Binding OnRefresh}"
+                      Header="_Refresh">
+              <MenuItem.Icon>
+                <i:Icon Value="mdi-refresh" />
+              </MenuItem.Icon>
+            </MenuItem>
+          </MenuItem>
+        </Menu>
       </StackPanel>
       <ScrollViewer>
         <Panel>

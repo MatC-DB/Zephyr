@@ -9,43 +9,33 @@
         x:CompileBindings="True"
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.ErrorDialogViewModel}"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="Transparent"
+        Background="#2d2d2f"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaChromeHints="NoChrome"
         WindowStartupLocation="CenterOwner"
         CanResize="False" ShowInTaskbar="False"
-        Width="300" Height="225"
+        Width="360" Height="240"
         Title="Zephyr - Error" Icon="/icon.ico">
-  <Panel>
-    <ExperimentalAcrylicBorder IsHitTestVisible="False">
-      <ExperimentalAcrylicBorder.Material>
-        <ExperimentalAcrylicMaterial
-        BackgroundSource="Digger"
-        TintColor="Black"
-        TintOpacity="1"
-        MaterialOpacity="0.65" />
-      </ExperimentalAcrylicBorder.Material>
-    </ExperimentalAcrylicBorder>
-    <StackPanel Margin="10" Spacing="5">
-      <StackPanel.Styles>
-        <Style Selector="StackPanel.title">
-          <Setter Property="Spacing" Value="5" />
-          <Setter Property="HorizontalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="StackPanel.title TextBlock">
-          <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="StackPanel.title Button">
-          <Setter Property="Padding" Value="3,2" />
-        </Style>
-      </StackPanel.Styles>
-      <TextBlock FontSize="20"
-                 FontWeight="SemiBold"
-                 Foreground="#FF122E">An error occured.</TextBlock>
+  <DockPanel Margin="10">
+    <DockPanel.Styles>
+      <Style Selector="StackPanel.title">
+        <Setter Property="Spacing" Value="5" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+      </Style>
+      <Style Selector="StackPanel.title TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+      </Style>
+      <Style Selector="StackPanel.title Button">
+        <Setter Property="Padding" Value="3,2" />
+      </Style>
+    </DockPanel.Styles>
+    <TextBlock FontSize="20" DockPanel.Dock="Top"
+               FontWeight="SemiBold"
+               Foreground="#FF122E" Margin="0,0,0,5">An error occured.</TextBlock>
+    <StackPanel DockPanel.Dock="Bottom" Spacing="5">
       <TextBlock TextWrapping="Wrap">
-        The operation failed.  Please try it again. If it happens repeatedly then please copy the following details and send them with an account of the actions you took to produce this error.
+        If it happens repeatedly then please copy the following details and send them with an account of the actions you took to produce this error."
       </TextBlock>
       <StackPanel Classes="title" Orientation="Horizontal">
         <TextBlock>Error Message</TextBlock>
@@ -60,5 +50,7 @@
       <Button HorizontalAlignment="Right"
               Command="{Binding Close}">Close</Button>
     </StackPanel>
-  </Panel>
+    <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+               Text="{Binding ErrorMessage}" />
+  </DockPanel>
 </Window>
