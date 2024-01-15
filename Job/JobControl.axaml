@@ -8,23 +8,29 @@
              xmlns:main="clr-namespace:Zephyr.Main;assembly=Zephyr"
              x:Class="Zephyr.Job.JobControl"
              x:DataType="local:JobControlViewModel"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DataContext="{x:Static z:DesignData.JobControlViewModel}"
              d:DesignWidth="300">
-  <Border BorderBrush="#DD555555" BorderThickness="1"
-          CornerRadius="5" MaxWidth="300"
-          Margin="5" Background="#DD363636">
-    <StackPanel>
+  <Border BorderBrush="#3E4452"
+          BorderThickness="1"
+          CornerRadius="5"
+          Margin="0,5,5,0">
+    <StackPanel Classes.IsActive="{Binding IsActive}">
+      <StackPanel.Styles>
+        <Style Selector="StackPanel.IsActive">
+          <Setter Property="Background" Value="#3a4049" />
+        </Style>
+      </StackPanel.Styles>
       <TextBlock Text="{Binding Sequence}" Margin="5,5,5,0"
                  FontSize="13"
-                 TextTrimming="CharacterEllipsis" />
-      <Border ToolTip.Tip="{Binding Job}">
-        <TextBlock FontSize="16" FontWeight="SemiBold"
-                   TextTrimming="CharacterEllipsis"
-                   Text="{Binding Job}"
-                   Margin="5,2,5,0" />
-      </Border>
-      <Border Background="#AA242424" Margin="0,5,0,0"
+                 TextTrimming="CharacterEllipsis"
+                 Foreground="#ddd"/>
+      <TextBlock FontSize="16" FontWeight="Medium"
+                 TextTrimming="CharacterEllipsis"
+                 Text="{Binding Job}"
+                 Margin="5,2,5,0"
+                 ToolTip.Tip="{Binding Job}" />
+      <Border Background="#21252b" Margin="0,5,0,0"
               CornerRadius="0,0,5,5">
         <DockPanel Margin="5">
           <DockPanel.Styles>
@@ -35,21 +41,23 @@
           </DockPanel.Styles>
           <StackPanel DockPanel.Dock="Right" Spacing="5"
                       Orientation="Horizontal">
-            <Button VerticalAlignment="Stretch"
+            <Button IsVisible="{Binding !$parent[main:Main].ViewModel.IsLocked}"
+                    VerticalAlignment="Stretch"
                     Command="{Binding $parent[main:Main].ViewModel.OnJobDelete}"
                     CommandParameter="{Binding $self.DataContext}">
               <i:Icon Value="mdi-trash-can-outline" />
             </Button>
             <StackPanel Orientation="Horizontal">
-              <!-- Up is down and down is up (arrays don't mimic ui) -->
-              <Button Command="{Binding $parent[main:Main].ViewModel.OnJobMoveDown}"
+              <Button IsVisible="{Binding !$parent[main:Main].ViewModel.IsLocked}"
+                      Command="{Binding $parent[main:Main].ViewModel.OnJobMoveUp}"
                       CommandParameter="{Binding $self.DataContext}"
                       VerticalAlignment="Stretch"
                       Padding="2,0,1,0"
                       CornerRadius="3,0,0,3">
                 <i:Icon Value="mdi-arrow-up-thin" />
               </Button>
-              <Button Command="{Binding $parent[main:Main].ViewModel.OnJobMoveUp}"
+              <Button IsVisible="{Binding !$parent[main:Main].ViewModel.IsLocked}"
+                      Command="{Binding $parent[main:Main].ViewModel.OnJobMoveDown}"
                       CommandParameter="{Binding $self.DataContext}"
                       VerticalAlignment="Stretch"
                       Padding="1,0,2,0"
@@ -61,10 +69,22 @@
           <Button Classes.highlight="{Binding IsActive}"
                   Command="{Binding $parent[main:Main].ViewModel.OnJobSelect}"
                   CommandParameter="{Binding $self.DataContext}">
-            <StackPanel Orientation="Horizontal" Spacing="7">
-              <i:Icon Value="mdi-check" />
-              <TextBlock>Select</TextBlock>
-            </StackPanel>
+            <Panel>
+              <Panel.Styles>
+                <Style Selector="StackPanel">
+                  <Setter Property="Orientation" Value="Horizontal" />
+                  <Setter Property="Spacing" Value="7" />
+                </Style>
+              </Panel.Styles>
+              <StackPanel IsVisible="{Binding IsActive}">
+                <i:Icon Value="mdi-check-bold" />
+                <TextBlock>Selected</TextBlock>
+              </StackPanel>
+              <StackPanel IsVisible="{Binding !IsActive}">
+                <i:Icon Value="mdi-chevron-right" FontSize="8" />
+                <TextBlock>Select</TextBlock>
+              </StackPanel>
+            </Panel>
           </Button>
         </DockPanel>
       </Border>

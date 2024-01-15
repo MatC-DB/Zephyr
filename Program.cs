@@ -3,9 +3,6 @@ using Avalonia.ReactiveUI;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.MaterialDesign;
 using System;
-using System.Threading.Tasks;
-using Zephyr.Error;
-using ReactiveMarbles.ObservableEvents;
 
 namespace Zephyr;
 

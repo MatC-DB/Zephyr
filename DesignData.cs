@@ -7,7 +7,7 @@ using Zephyr.Error;
 using Zephyr.Job;
 using Zephyr.Login;
 using Zephyr.Main;
-using Zephyr.Settings;
+using Zephyr.Interface;
 
 namespace Zephyr;
 
@@ -48,8 +48,4 @@ internal class DesignData {
     public static MainViewModel MainViewModel => new(MainWindowViewModel, _model, () => { });
 
     public static LoginViewModel LoginViewModel => new(MainWindowViewModel, _model, () => { });
-
-    public static SettingsViewModel SettingsViewModel => new(new SettingsModel.Settings() {
-        ShowWorkAreas = true,
-    });
 }

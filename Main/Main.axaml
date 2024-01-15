@@ -11,86 +11,74 @@
              mc:Ignorable="d"
              d:DataContext="{x:Static z:DesignData.MainViewModel}"
              d:DesignWidth="300" d:DesignHeight="400">
-  <Panel>
-    <DockPanel>
-      <WrapPanel DockPanel.Dock="Top">
-        <StackPanel Margin="0,0,15,2">
-          <StackPanel.Styles>
-            <Style Selector="Button">
-              <Setter Property="HorizontalContentAlignment" Value="Center" />
-              <Setter Property="Width" Value="60" />
-              <Setter Property="Padding" Value="10,7" />
-              <Setter Property="Margin" Value="5" />
-            </Style>
-          </StackPanel.Styles>
-          <TextBlock FontSize="16">Clocking</TextBlock>
-          <Button Classes.highlight="{Binding IsClockedOut}"
-                  Command="{Binding OnClock}"
-                  CommandParameter="{x:Static local:MainBindings.ClockOut}">Out</Button>
-        </StackPanel>
-        <StackPanel Margin="0,0,5,2" IsVisible="{Binding ShowWorkAreas}">
-          <TextBlock FontSize="16">Work Area</TextBlock>
-          <StackPanel Orientation="Horizontal">
-            <StackPanel.Styles>
-              <Style Selector="Button">
-                <Setter Property="HorizontalContentAlignment" Value="Center" />
-                <Setter Property="Padding" Value="10,7" />
-                <Setter Property="Margin" Value="5" />
-              </Style>
-            </StackPanel.Styles>
-            <Button Classes.highlight="{Binding IsOfficeSelected}"
-                    Command="{Binding OnWorkAreaSelected}"
-                    CommandParameter="{x:Static local:MainBindings.Office}">Office</Button>
-            <Button Classes.highlight="{Binding IsWfhSelected}"
-                    Command="{Binding OnWorkAreaSelected}"
-                    CommandParameter="{x:Static local:MainBindings.Wfm}">WFH</Button>
-          </StackPanel>
-        </StackPanel>
-      </WrapPanel>
-      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="5" Margin="0,0,0,2">
-        <TextBlock FontSize="16" VerticalAlignment="Bottom">Jobs</TextBlock>
-        <Button Padding="4,0" Command="{Binding OnAddJob}">+</Button>
-        <Menu Height="16">
-          <MenuItem CornerRadius="5" Padding="1">
-            <MenuItem.Header>
-              <i:Icon Value="mdi-cog-outline"
-                      Height="14" Width="14" />
-            </MenuItem.Header>
-            <MenuItem Command="{Binding OnOpenSettings}"
-                      Header="_Settings">
-              <MenuItem.Icon>
-                <i:Icon Value="mdi-cog-outline" />
-              </MenuItem.Icon>
-            </MenuItem>
-            <MenuItem Command="{Binding OnRefresh}"
-                      Header="_Refresh">
-              <MenuItem.Icon>
-                <i:Icon Value="mdi-refresh" />
-              </MenuItem.Icon>
-            </MenuItem>
-          </MenuItem>
-        </Menu>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Left" Spacing="4" Margin="0,5,0,0">
+      <StackPanel.Styles>
+        <Style Selector="Button">
+          <Setter Property="HorizontalContentAlignment" Value="Center" />
+          <Setter Property="Height" Value="36" />
+          <Setter Property="Width" Value="36" />
+          <Setter Property="CornerRadius" Value="4" />
+        </Style>
+      </StackPanel.Styles>
+      <Button IsEnabled="{Binding IsClockedIn}"
+              Classes.highlight="{Binding !IsClockedIn}"
+              Command="{Binding OnClock}"
+              CommandParameter="{x:Static local:MainBindings.ClockOut}"
+              ToolTip.Tip="Clock Out">
+        <i:Icon Value="mdi-clock-outline" FontSize="18" />
+      </Button>
+      <Grid Background="#3e4452" Height="1" Margin="5" />
+      <Button Command="{Binding OnAddJob}"
+              ToolTip.Tip="Add Job">
+        <i:Icon Value="mdi-plus" FontSize="18" />
+      </Button>
+      <Grid Background="#3e4452" Height="1" Margin="5" />
+      <StackPanel>
+        <Button IsEnabled="{Binding IsClockedIn}"
+                Classes.highlight="{Binding IsOfficeSelected}"
+                Command="{Binding OnWorkAreaSelected}"
+                CommandParameter="{x:Static local:MainBindings.Office}"
+                ToolTip.Tip="Office"
+                CornerRadius="4,4,0,0">
+          <i:Icon Value="mdi-office-building-outline" FontSize="18" />
+        </Button>
+        <Button IsEnabled="{Binding IsClockedIn}"
+                Classes.highlight="{Binding !IsOfficeSelected}"
+                Command="{Binding OnWorkAreaSelected}"
+                CommandParameter="{x:Static local:MainBindings.Wfm}"
+                ToolTip.Tip="Work From Home"
+                CornerRadius="0,0,4,4">
+          <i:Icon Value="mdi-home-outline" FontSize="18" />
+        </Button>
       </StackPanel>
-      <ScrollViewer>
+      <Grid Background="#3e4452" Height="1" Margin="5" />
+      <Button Command="{Binding OnRefresh}"
+              ToolTip.Tip="Refresh">
+        <i:Icon Value="mdi-refresh" FontSize="18" />
+      </Button>
+      <Button Command="{Binding OnLockClick}"
+              ToolTip.Tip="Lock/Unlock">
         <Panel>
-          <ItemsControl Items="{Binding Jobs}"
-                        IsVisible="{Binding IsViewportSmall}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <StackPanel />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-          </ItemsControl>
-          <ItemsControl Items="{Binding Jobs}"
-                        IsVisible="{Binding !IsViewportSmall}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <WrapPanel />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-          </ItemsControl>
+          <i:Icon Value="mdi-lock-outline" FontSize="18" IsVisible="{Binding !IsLocked}" />
+          <i:Icon Value="mdi-lock-open-outline" FontSize="18" IsVisible="{Binding IsLocked}" />
         </Panel>
-      </ScrollViewer>
-    </DockPanel>
-  </Panel>
+      </Button>
+      <!--
+      <Button Command="{Binding OnRefresh}"
+              ToolTip.Tip="Auto Login">
+        <i:Icon Value="mdi-login-variant" FontSize="18" />
+      </Button>
+      -->
+    </StackPanel>
+    <ScrollViewer Padding="5,0,0,0">
+      <ItemsControl Items="{Binding Jobs}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
 </UserControl>

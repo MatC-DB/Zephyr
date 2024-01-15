@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Interface;
 
 public partial class Model {
     public static async Task OpenJobsPanel(IPage page) {

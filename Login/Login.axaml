@@ -12,22 +12,21 @@
              d:DesignWidth="300" d:DesignHeight="450">
   <Panel>
     <StackPanel Spacing="5" MaxWidth="300">
-      <StackPanel Orientation="Horizontal">
-        <Image Source="/icon.ico" Width="32" />
-        <TextBlock Margin="5,0,0,0">
-          <TextBlock.Styles>
-            <Style Selector="TextBlock">
-              <Setter Property="FontSize" Value="32"/>
-            </Style>
-          </TextBlock.Styles>
+      <StackPanel Orientation="Horizontal"
+                  Margin="0,0,0,5">
+        <Image Source="/icon.ico" Width="50" />
+        <TextBlock Margin="5,0,0,0" 
+                   FontSize="32" 
+                   FontWeight="Light"
+                   VerticalAlignment="Bottom">
           Zephyr
         </TextBlock>
       </StackPanel>
       <TextBlock>Username</TextBlock>
       <TextBox Text="{Binding Username}" />
-      <TextBlock Margin="0,5,0,0">Password</TextBlock>
+      <TextBlock Margin="0,2,0,0">Password</TextBlock>
       <TextBox Text="{Binding Password}" PasswordChar="*" />
-      <Button Margin="0,5,0,0" HorizontalAlignment="Right"
+      <Button Margin="0,4,0,0" HorizontalAlignment="Right"
               Command="{Binding OnLogin}">Login</Button>
       <TextBlock Foreground="Red" Text="{Binding ErrorMessage}" />
     </StackPanel>
@@ -37,5 +36,4 @@
       <TextBlock Text="{Binding Version, FallbackValue=DEBUG}" />
     </StackPanel>
   </Panel>
-
 </UserControl>

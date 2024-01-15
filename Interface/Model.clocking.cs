@@ -3,7 +3,7 @@ using Microsoft.Playwright;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Interface;
 
 public partial class Model {
     public static async Task GetClockingPanel(IPage page) {
@@ -48,7 +48,7 @@ public partial class Model {
             await Clock(page, Clocking.In);
 
             // even though the response still comes back good
-            // we need to make sure the backend actually catches us
+            // we need to make sure the backend actually catches up
             for (int retry = 0; retry < 20; ++retry) { 
                 await Task.Delay(25);
 

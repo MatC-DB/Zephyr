@@ -10,16 +10,17 @@
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.MainWindowViewModel}"
         d:DesignWidth="350" d:DesignHeight="450"
-        Background="#2d2d2f"
+        Background="#282c34"
         ExtendClientAreaToDecorationsHint="True"
         Width="{Binding Width, Mode=TwoWay}"
         Height="{Binding Height, Mode=TwoWay}"
         WindowState="{Binding State, Mode=TwoWay}"
         WindowStartupLocation="CenterScreen"
         Title="Zephyr" Icon="/icon.ico">
-    <Panel Margin="40">
+  <Border BorderBrush="#009696" BorderThickness="1">
+    <Panel Margin="32">
       <rxui:RoutedViewHost Router="{Binding Router}"
-                           PageTransition="{x:Null}">
+                   PageTransition="{x:Null}">
         <rxui:RoutedViewHost.DefaultContent>
           <TextBlock Foreground="Red" Text="Error, bad route encountered." />
         </rxui:RoutedViewHost.DefaultContent>
@@ -27,9 +28,30 @@
           <z:AppViewLocator />
         </rxui:RoutedViewHost.ViewLocator>
       </rxui:RoutedViewHost>
-      <TextBlock IsVisible="{Binding IsLoading}"
-                 HorizontalAlignment="Right"
-                 VerticalAlignment="Bottom"
-                 ZIndex="1000">Loading...</TextBlock>
+      <Grid IsVisible="{Binding IsLoading}"
+            Width="50"
+            Height="5"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            ZIndex="1000">
+        <Grid.Styles>
+          <Style Selector="Grid">
+            <Style.Animations>
+              <Animation Duration="0:0:1" IterationCount="INFINITE">
+                <KeyFrame Cue="0%">
+                  <Setter Property="Background" Value="#00666d"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                  <Setter Property="Background" Value="Cyan"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                  <Setter Property="Background" Value="#00666d"/>
+                </KeyFrame>
+              </Animation>
+            </Style.Animations>
+          </Style>
+        </Grid.Styles>
+      </Grid>
     </Panel>
+  </Border>
 </Window>

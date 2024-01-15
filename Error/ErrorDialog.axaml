@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         xmlns:z="clr-namespace:Zephyr"
         xmlns:local="clr-namespace:Zephyr.Error;assembly=Zephyr"
         x:Class="Zephyr.Error.ErrorDialog"
@@ -9,48 +10,68 @@
         x:CompileBindings="True"
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.ErrorDialogViewModel}"
-        Background="#2d2d2f"
+        Background="#282c34"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaChromeHints="NoChrome"
         WindowStartupLocation="CenterOwner"
         CanResize="False" ShowInTaskbar="False"
-        Width="360" Height="240"
+        Width="320" Height="130"
         Title="Zephyr - Error" Icon="/icon.ico">
-  <DockPanel Margin="10">
-    <DockPanel.Styles>
-      <Style Selector="StackPanel.title">
-        <Setter Property="Spacing" Value="5" />
-        <Setter Property="HorizontalAlignment" Value="Center" />
-      </Style>
-      <Style Selector="StackPanel.title TextBlock">
-        <Setter Property="VerticalAlignment" Value="Center" />
-      </Style>
-      <Style Selector="StackPanel.title Button">
-        <Setter Property="Padding" Value="3,2" />
-      </Style>
-    </DockPanel.Styles>
-    <TextBlock FontSize="20" DockPanel.Dock="Top"
-               FontWeight="SemiBold"
-               Foreground="#FF122E" Margin="0,0,0,5">An error occured.</TextBlock>
-    <StackPanel DockPanel.Dock="Bottom" Spacing="5">
-      <TextBlock TextWrapping="Wrap">
-        If it happens repeatedly then please copy the following details and send them with an account of the actions you took to produce this error."
-      </TextBlock>
-      <StackPanel Classes="title" Orientation="Horizontal">
-        <TextBlock>Error Message</TextBlock>
-        <Button Command="{Binding OnCopy}"
-                CommandParameter="{Binding Message}">Copy</Button>
-      </StackPanel>
-      <StackPanel Classes="title" Orientation="Horizontal">
-        <TextBlock>Stack Trace</TextBlock>
-        <Button Command="{Binding OnCopy}"
-                CommandParameter="{Binding StackTrace}">Copy</Button>
+  <Border BorderBrush="#009696" BorderThickness="1">
+    <Panel>
+      <StackPanel Margin="10">
+        <TextBlock FontSize="20"
+                   FontWeight="SemiBold"
+                   Foreground="#FF122E"
+                   Margin="0,0,0,5">
+          An error occured.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap"
+                   TextTrimming="CharacterEllipsis"
+                   Text="{Binding ErrorMessage}"
+                   Margin="0,0,0,10"/>
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="3" />
+            <RowDefinition Height="auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="auto" />
+          </Grid.ColumnDefinitions>
+          <Grid.Styles>
+            <Style Selector="TextBlock">
+              <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style Selector="Button">
+              <Setter Property="Padding" Value="5,2" />
+            </Style>
+          </Grid.Styles>
+          <Button Command="{Binding OnCopy}"
+                  CommandParameter="{Binding Message}">
+            Copy
+          </Button>
+          <TextBlock Grid.Column="2">Message</TextBlock>
+          <Button Command="{Binding OnCopy}"
+                  CommandParameter="{Binding StackTrace}"
+                  Grid.Row="2"
+                  Grid.Column="0">
+            Copy
+          </Button>
+          <TextBlock Grid.Column="2"
+                     Grid.Row="2">Stack Trace</TextBlock>
+        </Grid>
       </StackPanel>
       <Button HorizontalAlignment="Right"
-              Command="{Binding Close}">Close</Button>
-    </StackPanel>
-    <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-               Text="{Binding ErrorMessage}" />
-  </DockPanel>
+              VerticalAlignment="Top"
+              Margin="5"
+              Padding="4"
+              Command="{Binding Close}">
+        <i:Icon Value="mdi-close" FontSize="12" />
+      </Button>
+    </Panel>
+  </Border>
 </Window>

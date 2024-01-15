@@ -3,7 +3,7 @@ using Microsoft.Playwright;
 using System;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Interface;
 
 public partial class Model {
     [Time]

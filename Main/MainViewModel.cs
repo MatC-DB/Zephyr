@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Zephyr.AddJob;
 using Zephyr.Job;
-using Zephyr.Settings;
+using Zephyr.Interface;
 
 namespace Zephyr.Main;
 
@@ -27,15 +27,9 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
     public bool IsClockedIn { get { return _clocking == Model.Clocking.In; } }
 
-    public bool IsClockedOut { get { return _clocking == Model.Clocking.Out; } }
-
     public ReactiveCommand<Model.Clocking, Unit> OnClock { get; }
 
     public ICommand OnRefresh { get; }
-
-    public Interaction<SettingsViewModel, SettingsModel.Settings> ShowSettingsDialog { get; }
-
-    public ICommand OnOpenSettings { get; }
     #endregion
 
     #region WorkAreaParams
@@ -43,23 +37,16 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
     public bool IsOfficeSelected { get { return _workArea == Model.WorkAreas.Office; } }
 
-    public bool IsWfhSelected { get { return _workArea == Model.WorkAreas.Wfm; } }
-
     public ReactiveCommand<Model.WorkAreas, Unit> OnWorkAreaSelected { get; }
-
-    public bool ShowWorkAreas { get { return _model.Settings.ShowWorkAreas; } }
     #endregion
 
     #region JobParams
     [Reactive]
     public string CurrentJobSequenceValue { get; private set; } = string.Empty;
 
-    [Reactive]
-    public bool IsViewportSmall { get; set; }
-
     public ICommand OnAddJob { get; }
 
-    public ObservableCollection<JobControlViewModel> Jobs { get { return _model.Jobs; } set { _model.Jobs = value; } }
+    public ObservableCollection<JobControlViewModel> Jobs { get { return _model.Jobs; } }
 
     public ReactiveCommand<JobControlViewModel, Unit> OnJobDelete { get; }
 
@@ -71,6 +58,18 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
     public Interaction<AddJobDialogViewModel, JobControlViewModel?> ShowAddJobDialog { get; }
     #endregion
+
+    [Reactive]
+    public bool IsLocked { get; private set; } = true;
+
+    public ReactiveCommand<Unit, Unit> OnLockClick { get; }
+
+    public bool IsAutoLoginEnabled { 
+        get { return _model.IsAutoLoginEnabled; } 
+        set { _model.IsAutoLoginEnabled = value; }
+    }
+
+    public ReactiveCommand<Unit, Unit> OnAutoLoginClick { get; }
 
     public MainViewModel(IScreen screen, Model model, Action triggerSave) {
         _model = model;
@@ -87,10 +86,6 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
         OnWorkAreaSelected = ReactiveCommand.CreateFromTask<Model.WorkAreas>(SetWorkArea);
 
-        ShowSettingsDialog = new Interaction<SettingsViewModel, SettingsModel.Settings>();
-
-        OnOpenSettings = ReactiveCommand.CreateFromTask(OpenSettings);
-
         // jobs
         ShowAddJobDialog = new Interaction<AddJobDialogViewModel, JobControlViewModel?>();
 
@@ -104,34 +99,38 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
         OnJobSelect = ReactiveCommand.CreateFromTask<JobControlViewModel>(SelectJob);
 
-        OnJobMoveUp = ReactiveCommand.Create<JobControlViewModel>((model) => MoveJob(model, 1));
-        OnJobMoveDown = ReactiveCommand.Create<JobControlViewModel>((model) => MoveJob(model, -1));
+        OnJobMoveUp = ReactiveCommand.Create<JobControlViewModel>((model) => MoveJob(model, -1));
+        OnJobMoveDown = ReactiveCommand.Create<JobControlViewModel>((model) => MoveJob(model, 1));
+
+        // lock
+        OnLockClick = ReactiveCommand.Create(() => { IsLocked = !IsLocked; });
+
+        OnAutoLoginClick = ReactiveCommand.Create(() => { IsAutoLoginEnabled = !IsAutoLoginEnabled; });
     }
 
     private void SetWorkAreaStatus(Model.WorkAreas? status) {
         _workArea = status;
 
         this.RaisePropertyChanged(nameof(IsOfficeSelected));
-        this.RaisePropertyChanged(nameof(IsWfhSelected));
     }
 
     private void SetClockingStatus(Model.Clocking? status) {
         _clocking = status;
 
         this.RaisePropertyChanged(nameof(IsClockedIn));
-        this.RaisePropertyChanged(nameof(IsClockedOut));
 
         if (status == Model.Clocking.Out) {
             CurrentJobSequenceValue = string.Empty;
-            this.RaisePropertyChanged(nameof(CurrentJobSequenceValue));
         }
     }
 
     public async Task GetStatus() {
         await _model.RunTask(async (page) => {
             var status = await Model.GetStatus(page);
+
             SetClockingStatus(status.IsClockedIn ? Model.Clocking.In : Model.Clocking.Out);
             SetWorkAreaStatus(status.IsWfm ? Model.WorkAreas.Wfm : Model.WorkAreas.Office);
+
             CurrentJobSequenceValue = status.Sequence;
         });
     }
@@ -154,16 +153,6 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
 
             SetWorkAreaStatus(area);
         });
-    }
-
-    private async Task OpenSettings() {
-        var settingsDialog = new SettingsViewModel(_model.Settings);
-
-        var result = await ShowSettingsDialog.Handle(settingsDialog);
-
-        _model.Settings = result;
-
-        this.RaisePropertyChanged(nameof(ShowWorkAreas));
     }
 
     private async Task AddJob() {

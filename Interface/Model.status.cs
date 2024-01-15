@@ -2,7 +2,7 @@
 using Microsoft.Playwright;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Interface;
 
 public partial class Model {
     private const string GET_TODAYS_EVENTS = @"() => {

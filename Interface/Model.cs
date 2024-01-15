@@ -7,12 +7,11 @@ using System.Reactive;
 using System.Collections.ObjectModel;
 using Zephyr.Job;
 using MethodTimer;
-using Zephyr.Settings;
 using System.Diagnostics;
 using System.Text.Json;
 using ReactiveMarbles.ObservableEvents;
 
-namespace Zephyr;
+namespace Zephyr.Interface;
 
 public partial class Model {
     public const string BASE_URL = "https://time.dbbroadcast.co.uk:442/";
@@ -34,7 +33,7 @@ public partial class Model {
 
     public ObservableCollection<JobControlViewModel> Jobs { get; set; } = new();
 
-    public SettingsModel.Settings Settings { get; set; } = new() { ShowWorkAreas = true };
+    public bool IsAutoLoginEnabled { get; set; }
 
     public Model(
         Func<Exception, IObservable<Unit>> errorDialogHandler,

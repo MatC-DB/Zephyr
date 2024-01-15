@@ -9,7 +9,7 @@
         x:CompileBindings="True"
         mc:Ignorable="d"
         d:DataContext="{x:Static z:DesignData.AddJobDialogViewModel}"
-        Background="#2d2d2f"
+        Background="#282c34"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="-1"
         ExtendClientAreaChromeHints="NoChrome"
@@ -17,6 +17,7 @@
         CanResize="False" ShowInTaskbar="False"
         Width="450" Height="300"
         Title="Zephyr - Add Job" Icon="/icon.ico">
+  <Border BorderBrush="#009696" BorderThickness="1">
     <DockPanel Margin="10">
       <DockPanel DockPanel.Dock="Bottom" Margin="0,5,0,0">
         <StackPanel Orientation="Horizontal" Spacing="5">
@@ -36,9 +37,9 @@
           <StackPanel Spacing="5" Margin="0,0,0,5"
                       DockPanel.Dock="Top">
             <TextBlock FontSize="20" FontWeight="SemiBold">Job</TextBlock>
-            <TextBox Name="JobSearchBox" 
-                     AttachedToVisualTree="OnJobAttached" 
-                     Watermark="Search" 
+            <TextBox Name="JobSearchBox"
+                     AttachedToVisualTree="OnJobAttached"
+                     Watermark="Search"
                      Text="{Binding JobSearchText}" />
           </StackPanel>
           <ListBox Items="{Binding JobSearchResults}"
@@ -52,7 +53,7 @@
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding}" Padding="14" Background="Transparent" DoubleTapped="OnJobDoubleClick" />
+                <TextBlock Text="{Binding}" Padding="10" Background="Transparent" DoubleTapped="OnJobDoubleClick" />
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
@@ -61,7 +62,7 @@
           <StackPanel Spacing="5" Margin="0,0,0,5"
                       DockPanel.Dock="Top">
             <TextBlock FontSize="20" FontWeight="SemiBold">Sequence</TextBlock>
-            <TextBox Name="SequenceSearchBox" 
+            <TextBox Name="SequenceSearchBox"
                      Watermark="Search"
                      Text="{Binding SequenceSearchText}" />
           </StackPanel>
@@ -76,11 +77,12 @@
             </ListBox.Styles>
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding}" Padding="14" Background="Transparent" DoubleTapped="OnSequenceDoubleClick" />
+                <TextBlock Text="{Binding}" Padding="10" Background="Transparent" DoubleTapped="OnSequenceDoubleClick" />
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
         </DockPanel>
       </Panel>
     </DockPanel>
+  </Border>
 </Window>

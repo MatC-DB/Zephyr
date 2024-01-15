@@ -6,7 +6,8 @@ using ReactiveUI.Fody.Helpers;
 using Zephyr.Job;
 using System;
 using System.Reactive;
-using Zephyr.Settings;
+using System.Reactive.Linq;
+using Zephyr.Interface;
 
 namespace Zephyr;
 
@@ -35,8 +36,11 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
     public ObservableCollection<JobControlViewModel> Jobs { get { return _model.Jobs; } set { _model.Jobs = value; } }
 
     [DataMember]
-    public SettingsModel.Settings Settings { get { return _model.Settings; } set { _model.Settings = value; } }
+    public bool IsAutoLoginEnabled { get { return _model.IsAutoLoginEnabled; } set { _model.IsAutoLoginEnabled = value; } }
     #endregion
+
+    [Reactive]
+    public bool IsFocused { get; set; } = true;
 
     public MainWindowViewModel() {
         ErrorDialog = new Interaction<Exception, Unit>();

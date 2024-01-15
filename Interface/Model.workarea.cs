@@ -3,7 +3,7 @@ using Microsoft.Playwright;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Zephyr;
+namespace Zephyr.Interface;
 
 public partial class Model {
     public enum WorkAreas {
