@@ -27,31 +27,51 @@ public partial class MainWindowViewModel : ReactiveObject, IScreen {
 
     #region SavedData
     [DataMember]
-    public string Username { get { return _model.Username; } set { _model.Username = value; } }
+    public string Username { 
+        get { return _model.Username; }
+        set { _model.Username = value; } 
+    }
 
     [DataMember]
-    public string Password { get { return _model.Password; } set { _model.Password = value; } }
+    public string Password { 
+        get { return _model.Password; } 
+        set { _model.Password = value; }
+    }
 
     [DataMember]
-    public ObservableCollection<JobControlViewModel> Jobs { get { return _model.Jobs; } set { _model.Jobs = value; } }
+    public ObservableCollection<JobControlViewModel> Jobs { 
+        get { return _model.Jobs; } 
+        set { _model.Jobs = value; } 
+    }
 
     [DataMember]
-    public bool IsAutoLoginEnabled { get { return _model.IsAutoLoginEnabled; } set { _model.IsAutoLoginEnabled = value; } }
+    public bool IsAutoLoginEnabled { 
+        get { return _model.IsAutoLoginEnabled; } 
+        set { _model.IsAutoLoginEnabled = value; } 
+    }
     #endregion
 
     [Reactive]
     public bool IsFocused { get; set; } = true;
 
+    private readonly Action _loginOnLoad;
+
     public MainWindowViewModel() {
+
         ErrorDialog = new Interaction<Exception, Unit>();
 
         _model = new(ErrorDialog.Handle, IncrementProcessesRunning, DecrementProcessesRunning);
 
-        Router.Navigate.Execute(new Login.LoginViewModel(this, _model, TriggerSave));
+        Task.Run(_model.InitializePage);
+
+        var loginViewModel = new Login.LoginViewModel(this, _model, TriggerSave);
+        _loginOnLoad = loginViewModel.OnLoad;
+
+        Router.Navigate.Execute(loginViewModel);
     }
 
-    public async Task OnLoad() {
-        await _model.OnLoad();
+    public void OnLoad() {
+        _loginOnLoad();
     }
 
     private void IsLoadingCheck() {

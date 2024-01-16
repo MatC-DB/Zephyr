@@ -105,7 +105,11 @@ public class MainViewModel : ReactiveObject, IRoutableViewModel {
         // lock
         OnLockClick = ReactiveCommand.Create(() => { IsLocked = !IsLocked; });
 
-        OnAutoLoginClick = ReactiveCommand.Create(() => { IsAutoLoginEnabled = !IsAutoLoginEnabled; });
+        OnAutoLoginClick = ReactiveCommand.Create(() => {
+            IsAutoLoginEnabled = !IsAutoLoginEnabled;
+
+            this.RaisePropertyChanged(nameof(IsAutoLoginEnabled));
+        });
     }
 
     private void SetWorkAreaStatus(Model.WorkAreas? status) {

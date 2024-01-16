@@ -8,8 +8,8 @@
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <PublishSingleFile>true</PublishSingleFile>
-    <AssemblyVersion>2.0.2.0</AssemblyVersion>
-    <FileVersion>2.0.2.0</FileVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="akavache" Version="9.1.7" />

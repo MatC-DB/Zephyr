@@ -25,7 +25,9 @@ public partial class Model {
     private IBrowser? _browser;
     private IPage? _page;
 
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+    private readonly SemaphoreSlim _pageSemaphore = new(1, 1);
+
+    private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
 
     public string Username { get; set; } = string.Empty;
 
@@ -49,7 +51,7 @@ public partial class Model {
         if (_browser is not null)
             Task.Run(_browser.CloseAsync).Wait();
         _playWright?.Dispose();
-        _semaphoreSlim.Dispose();
+        _pageSemaphore.Dispose();
     }
 
     [Time]
@@ -62,6 +64,8 @@ public partial class Model {
     }
 
     private async Task<IPage> GetPage() {
+        await _initializationSemaphore.WaitAsync();
+
         _playWright ??= await Playwright.CreateAsync();
 
 #if DEBUG && false
@@ -92,19 +96,25 @@ public partial class Model {
 #endif
         }
 
+        _initializationSemaphore.Release();
+
         return _page;
+    }
+
+    public async Task InitializePage() {
+        await GetPage();
     }
 
     private async Task<IPage> GetLockedPage() {
         var page = await GetPage();
 
-        await _semaphoreSlim.WaitAsync();
+        await _pageSemaphore.WaitAsync();
 
         return page;
     }
 
     private void ReleasePage() {
-        _semaphoreSlim.Release();
+        _pageSemaphore.Release();
     }
 
     public async Task RunTask(Func<IPage, Task> task, Func<Exception, bool>? tryHandleError = null) {

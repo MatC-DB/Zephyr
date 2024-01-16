@@ -64,12 +64,11 @@
           <i:Icon Value="mdi-lock-open-outline" FontSize="18" IsVisible="{Binding IsLocked}" />
         </Panel>
       </Button>
-      <!--
-      <Button Command="{Binding OnRefresh}"
+      <Button Command="{Binding OnAutoLoginClick}"
+              Classes.highlight="{Binding IsAutoLoginEnabled}"
               ToolTip.Tip="Auto Login">
         <i:Icon Value="mdi-login-variant" FontSize="18" />
       </Button>
-      -->
     </StackPanel>
     <ScrollViewer Padding="5,0,0,0">
       <ItemsControl Items="{Binding Jobs}">

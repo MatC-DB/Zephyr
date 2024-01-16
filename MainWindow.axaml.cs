@@ -17,7 +17,7 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel> {
     public MainWindow(MainWindowViewModel viewModel): this() {
         ViewModel = viewModel;
 
-        RxApp.MainThreadScheduler.Schedule(async () => await ViewModel.OnLoad());
+        RxApp.MainThreadScheduler.Schedule(ViewModel.OnLoad);
 
         this.WhenActivated(d => d(ViewModel.ErrorDialog.RegisterHandler(ShowErrorDialogAsync)));
     }

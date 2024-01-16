@@ -1,6 +1,7 @@
 ﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
+using System.Reactive;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -25,7 +26,7 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
     [Reactive]
     public string ErrorMessage { get; set; } = string.Empty;
 
-    public ICommand OnLogin { get; }
+    public ReactiveCommand<Unit, Unit> OnLogin { get; }
 
     public LoginViewModel(IScreen screen, Model model, Action triggerSave) {
         HostScreen = screen;
@@ -33,6 +34,12 @@ public class LoginViewModel : ReactiveObject, IRoutableViewModel {
         _triggerSave = triggerSave;
 
         OnLogin = ReactiveCommand.CreateFromTask(Login);
+    }
+
+    public void OnLoad() {
+        if (_model.IsAutoLoginEnabled) {
+            OnLogin.Execute().Subscribe();
+        }
     }
 
     private async Task Login() {

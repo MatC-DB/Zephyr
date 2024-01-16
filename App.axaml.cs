@@ -19,8 +19,9 @@ public partial class App : Application {
         suspension.OnFrameworkInitializationCompleted();
 
         var state = RxApp.SuspensionHost.GetAppState<MainWindowViewModel>();
-        new MainWindow(state).Show();
 
         base.OnFrameworkInitializationCompleted();
+
+        new MainWindow(state).Show();
     }
 }
